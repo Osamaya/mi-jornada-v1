@@ -1,7 +1,11 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { upgradeState, validateState } from '../../domain/work/validate';
 import { money } from '../../domain/money';
 import type { AppState, WeekEstimate } from '../../shared/models';
+
+const LocalFiles = registerPlugin<{
+  saveFile(options: { name: string; contents: string; mime: string }): Promise<{ saved: boolean }>;
+}>('LocalFiles');
 
 export function backupJson(state: AppState): string {
   validateState(state);
@@ -78,21 +82,8 @@ export function csvWeek(state: AppState, estimate: WeekEstimate): string {
   return '\uFEFF' + rows.join('\r\n');
 }
 export async function saveFile(name: string, contents: string, mime: string): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-    const { Share } = await import('@capacitor/share');
-    const file = await Filesystem.writeFile({
-      path: `exports/${name}`,
-      data: contents,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8,
-      recursive: true,
-    });
-    await Share.share({
-      title: 'Mi Jornada',
-      url: file.uri,
-      dialogTitle: 'Guardar o compartir archivo',
-    });
+  if (Capacitor.getPlatform() === 'android') {
+    await LocalFiles.saveFile({ name, contents, mime: mime.split(';')[0] });
   } else {
     const url = URL.createObjectURL(new Blob([contents], { type: mime }));
     const a = document.createElement('a');

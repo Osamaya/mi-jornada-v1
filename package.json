@@ -21,8 +21,6 @@
     "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",
-    "@capacitor/filesystem": "^8.1.5",
-    "@capacitor/share": "^8.0.3",
     "@js-temporal/polyfill": "^0.5.1",
     "lucide-react": "^1.59.0",
     "react": "^19.3.1",

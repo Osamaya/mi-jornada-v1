@@ -395,7 +395,8 @@ export function Settings({
         </summary>
         <div className="settings-section-body">
           <p className="muted">
-            Guarda una copia fuera de la app para recuperar tus jornadas si cambias de teléfono.
+            Guarda una copia fuera de la app para recuperar tus jornadas si cambias de teléfono. En
+            Android, elige una carpeta del teléfono, por ejemplo Descargas.
           </p>
           <div className="button-row">
             <button
