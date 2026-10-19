@@ -1,6 +1,6 @@
 # Implementación actual — Mi Jornada v1.0
 
-Fecha: 19 de octubre de 2026. Aplicación funcional local, con build de producción y proyecto Android generado. La instalación/piloto en dispositivo y el APK siguen pendientes del entorno Android.
+Fecha: 19 de octubre de 2026. Aplicación funcional local, build web y primera APK debug 1.0.0 generados. Probada en emulador Android 17 / API 37 con SQLite nativo y modo avión. La prueba en teléfono físico y el piloto con recibo real siguen pendientes.
 
 ## Estructura
 
@@ -17,7 +17,7 @@ src/
     defaults.ts               perfil inicial sin tarifa inventada
   infrastructure/
     database/                 SQLite nativo, SQLite/WASM web, migración y repositorio
-    backup/files.ts           JSON, CSV, guardado/compartir
+    backup/files.ts           JSON, CSV, selector Android y descarga web
   presentation/
     App.tsx                   inicio, historial y navegación
     pages/                    configuración y resumen
@@ -32,16 +32,20 @@ android/                      proyecto Capacitor y wrapper Gradle
 
 - Entrada/salida, una jornada abierta persistente, descansos pagados y comida libre no pagada.
 - Registro manual, cruce de medianoche, edición con motivo, prevención transaccional de superposición y eliminación lógica auditada.
-- Inicio, historial, resumen y configuración; botones grandes, etiquetas, diálogo con foco y colores del sistema.
+- Inicio, historial, resumen y configuración; nombre opcional con saludo e iniciales, azul marino y grises, temas claro/oscuro, texto legible y botones grandes.
+- Pago explicado como antes/después de descuentos, ayudas accesibles para FICA y datos del recibo, ajustes por secciones desplegables y opción de dejar datos desconocidos pendientes.
 - Historial de tarifa y condiciones por vigencia; cambios de modalidad desde esta semana o una futura, sin reescribir los fichajes ni condiciones de semanas previas.
 - Tiempo observado, pagado/computable, ordinario y extra separados; segmentos de origen y explicación del cálculo.
 - Bruto y neto estimados con campos pendientes explícitos. Datos fiscales por pago, retención federal calibrable y comparación con neto recibido.
 - JSON versionado, validación completa, vista previa y confirmación de reemplazo; copia previa persistida en SQLite dentro de la misma transacción. Puede exportarse después desde Configuración.
 - CSV por segmentos, con escape de campos potencialmente interpretados como fórmulas.
+- Guardado de JSON/CSV en Android mediante `LocalFilesPlugin` y el selector de documentos del sistema, sin permisos generales de archivos ni aplicaciones externas. El contenido no se incluye en el estado guardado de la actividad del selector.
+- Atrás cierra el editor, vuelve al inicio o minimiza desde el inicio; barra de estado protegida durante el desplazamiento y contraste sincronizado con el tema del sistema.
+- Confirmación visible de guardado de pagos y bloqueo de edición hasta que termine la transacción.
 
 ## Persistencia
 
-En Android se usa `@capacitor-community/sqlite`; en web, `sql.js` con WASM empaquetado localmente y copia durable en IndexedDB. No hay servidor de datos. La versión de esquema instalada es 1 y se registra en `schema_migrations`; su fuente está en `src/infrastructure/database/schema.ts`.
+En Android se usa `@capacitor-community/sqlite`; en web, `sql.js` con WASM empaquetado localmente y copia durable en IndexedDB. No hay servidor de datos. La versión de esquema instalada es 2 y se registra en `schema_migrations`; su fuente está en `src/infrastructure/database/schema.ts`. La migración añade un nombre opcional sin modificar jornadas. El respaldo v2 conserva ese nombre y acepta la conversión validada de respaldos v1.
 
 Se valida todo el estado antes de cada commit. Sesiones, descansos, tarifas, configuraciones, pagos y auditoría se guardan en una transacción con revisión optimista. Para el volumen de un perfil personal, el repositorio reescribe sus tablas de datos en cada transacción; conserva las copias de recuperación aparte. Conviene optimizar escrituras incrementales antes de extenderlo a volúmenes grandes.
 
@@ -63,6 +67,6 @@ No hay cifrado adicional configurado. Los datos Android quedan en el almacenamie
 
 ## Estado por fases
 
-Diseño, dominio, persistencia, UI, cálculo y pruebas locales implementados. Capacitor sincronizado y proyecto Android preparado. La compilación APK se intentó; el wrapper no pudo descargar Gradle con la red restringida y no se encontró Android SDK configurado ni instalado en las rutas habituales. Se encontró Java 24. No se generó ni firmó un APK y no se afirma prueba en dispositivo.
+Diseño, dominio, persistencia, UI, cálculo y pruebas locales implementados. Capacitor sincroniza SQLite y App; el plugin local de documentos se registra en `MainActivity`. Compilación debug exitosa con JDK 24, wrapper Gradle 8.14.3, SDK 36 y Build Tools 35.0.0. Firma debug verificada e instalación en emulador API 37 completada. Se revisaron teclado, temas del sistema, navegación, persistencia, JSON/CSV y restauración nativos.
 
-La compilación APK requiere un SDK Android instalado. El procedimiento para completarlo se encuentra en [android.md](android.md). El piloto requiere una semana real y comprobante del usuario.
+El procedimiento reproducible está en [android.md](android.md). La firma de distribución, la prueba en el teléfono físico y el piloto de una semana real con comprobante siguen pendientes.

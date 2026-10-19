@@ -2,8 +2,9 @@ import { ZONE, type AppState } from '../shared/models';
 import { localInstant, mondayDate } from '../domain/time';
 export function initialState(): AppState {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     revision: 1,
+    profile: { displayName: '' },
     employment: [
       {
         id: 'employment-initial',

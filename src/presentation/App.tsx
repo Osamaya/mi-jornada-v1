@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { App as NativeApp } from '@capacitor/app';
 import {
   CalendarDays,
   ChevronRight,
@@ -36,6 +38,7 @@ import {
 import { SessionEditor } from './components/SessionEditor';
 import { Settings } from './pages/Settings';
 import { Summary } from './pages/Summary';
+import { initials } from './components/ProfileCard';
 
 let repositoryPromise: Promise<Repository> | undefined;
 function openRepository() {
@@ -61,6 +64,35 @@ export default function App() {
     [breakKind, setBreakKind] = useState<'meal-on-duty' | 'short-rest' | 'unpaid-meal'>(
       'meal-on-duty',
     );
+  const navigationState = useRef({ page, editor });
+  navigationState.current = { page, editor };
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') return;
+    const theme = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncSystemBars = () => {
+      void SystemBars.setStyle({
+        style: theme.matches ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      });
+    };
+    syncSystemBars();
+    theme.addEventListener('change', syncSystemBars);
+    const listener = NativeApp.addListener('backButton', () => {
+      const current = navigationState.current;
+      if (current.editor) {
+        setEditor(null);
+      } else if (current.page !== 'home') {
+        setPage('home');
+        setError('');
+        window.scrollTo({ top: 0 });
+      } else {
+        void NativeApp.minimizeApp();
+      }
+    });
+    return () => {
+      theme.removeEventListener('change', syncSystemBars);
+      void listener.then((handle) => handle.remove());
+    };
+  }, []);
   async function refresh() {
     try {
       setState(await (await openRepository()).load());
@@ -175,7 +207,12 @@ export default function App() {
         >
           <span className="brand-mark">MJ</span>
           <span>
-            Mi Jornada<small>Tu tiempo cuenta.</small>
+            Mi Jornada
+            <small>
+              {state.profile.displayName
+                ? `El espacio de ${state.profile.displayName}`
+                : 'Tu espacio personal'}
+            </small>
           </span>
         </a>
         <nav aria-label="Navegación principal">
@@ -208,9 +245,23 @@ export default function App() {
           <span className="location">
             <span className="status-dot" /> Las Vegas, Nevada
           </span>
-          <span className="private-pill">
-            <LockKeyhole size={14} /> Datos locales
-          </span>
+          <button
+            className="account-button"
+            onClick={() => go('settings')}
+            aria-label={
+              state.profile.displayName
+                ? `Perfil de ${state.profile.displayName}`
+                : 'Personalizar mi nombre'
+            }
+          >
+            <span className="account-copy">
+              <strong>{state.profile.displayName || 'Tu espacio'}</strong>
+              <small>Solo en este dispositivo</small>
+            </span>
+            <span className="profile-avatar" aria-hidden="true">
+              {initials(state.profile.displayName)}
+            </span>
+          </button>
         </header>
         <main className="main-content" aria-busy={busy}>
           {error && (
@@ -234,8 +285,17 @@ export default function App() {
                   <span className="eyebrow">
                     {formatDate(now, { weekday: 'long', year: 'numeric' }).toUpperCase()}
                   </span>
-                  <h1>Tu tiempo cuenta.</h1>
-                  <p>Registra tu jornada. Ten tus cuentas a la mano.</p>
+                  <h1 className="personal-greeting">
+                    {state.profile.displayName
+                      ? `Hola, ${state.profile.displayName}.`
+                      : 'Tu jornada, a tu manera.'}
+                  </h1>
+                  <p>Tu tiempo y tu pago, en orden.</p>
+                  {!state.profile.displayName && (
+                    <button className="text-button personalize-link" onClick={() => go('settings')}>
+                      Agrega tu nombre y hazla tuya <ChevronRight size={15} />
+                    </button>
+                  )}
                 </div>
                 <span className="date-badge">
                   <CalendarDays size={19} />
@@ -243,7 +303,9 @@ export default function App() {
                 </span>
               </div>
               <div className="home-grid">
-                <section className={`clock-card ${active ? 'running' : ''}`}>
+                <section
+                  className={`clock-card ${active ? 'running' : ''} ${pause ? 'paused' : ''}`}
+                >
                   <div className="section-row">
                     <span className="eyebrow">TU JORNADA DE HOY</span>
                     <span className="clock-status">
@@ -278,6 +340,11 @@ export default function App() {
                     )}
                     {active ? 'Finalizar jornada' : 'Iniciar jornada'}
                   </button>
+                  <p className="clock-hint">
+                    {active
+                      ? 'Tu entrada está guardada. Vuelve aquí cuando termines de trabajar.'
+                      : 'Toca el botón al comenzar tu trabajo.'}
+                  </p>
                   {active && (
                     <div className="break-actions">
                       {!pause && (
@@ -291,9 +358,11 @@ export default function App() {
                           value={breakKind}
                           onChange={(e) => setBreakKind(e.target.value as typeof breakKind)}
                         >
-                          <option value="meal-on-duty">Comida pagada con obligaciones</option>
+                          <option value="meal-on-duty">
+                            Comida mientras sigo atendiendo el trabajo
+                          </option>
                           <option value="short-rest">Descanso corto pagado</option>
-                          <option value="unpaid-meal">Comida libre no pagada (mín. 30 min)</option>
+                          <option value="unpaid-meal">Comida libre, sin pago (30 min o más)</option>
                         </select>
                       )}
                       <button
@@ -332,12 +401,23 @@ export default function App() {
                   </div>
                   <div className="mini-pay">
                     <div>
-                      <span>Bruto estimado</span>
+                      <span>Antes de descuentos</span>
                       <strong>{money(currentEstimate.grossCents)}</strong>
                     </div>
                     <div>
-                      <span>Neto estimado</span>
+                      <span>Después de descuentos</span>
                       <strong>{money(currentTaxes.net)}</strong>
+                      {currentTaxes.net === null && currentEstimate.grossCents !== null && (
+                        <button
+                          className="text-button inline-pay-action"
+                          onClick={() => {
+                            setViewMs(now);
+                            go('summary');
+                          }}
+                        >
+                          Completar con mi recibo <ChevronRight size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <button
@@ -529,13 +609,14 @@ export default function App() {
               state={state}
               estimate={estimate}
               taxes={taxes}
+              onSettings={() => go('settings')}
               changeWeek={setViewMs}
               update={update}
             />
           )}
           {page === 'settings' && (
             <Settings
-              key={state.revision}
+              key={`${atDate(state.employment, now)!.id}-${atDate(state.payroll, now)!.id}-${state.rates.map((r) => r.id).join('-')}`}
               state={state}
               update={update}
               restore={async (imported) => {

@@ -14,3 +14,12 @@ CREATE TABLE IF NOT EXISTS weekly_payment_records (id TEXT PRIMARY KEY NOT NULL,
 CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY NOT NULL, at_ms INTEGER NOT NULL, payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS recovery_snapshots (id TEXT PRIMARY KEY NOT NULL, at_ms INTEGER NOT NULL, payload TEXT NOT NULL);
 `;
+
+/** v2: nombre opcional; las tablas de jornadas permanecen intactas. */
+export const migration2 = `
+CREATE TABLE IF NOT EXISTS user_profile (
+  singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+  display_name TEXT NOT NULL CHECK(length(display_name)<=60)
+);
+INSERT OR IGNORE INTO user_profile VALUES(1,'');
+`;

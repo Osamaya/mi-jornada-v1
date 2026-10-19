@@ -10,12 +10,21 @@ test('registro, reinicio, cálculo, respaldo y restauración', async ({ page, co
   await expect(page.getByRole('button', { name: 'Iniciar jornada', exact: true })).toBeVisible();
   await page.screenshot({ path: `test-results/${info.project.name}-inicio.png`, fullPage: true });
   await page.getByRole('button', { name: 'Configuración', exact: true }).click();
-  await page.getByLabel('Confirmé que soy empleado', { exact: false }).check();
-  await page.getByLabel('Confirmé con mi empleador', { exact: false }).check();
-  await page.getByLabel('Mi nómina está sujeta', { exact: false }).check();
-  await page.getByLabel('Confirmo este porcentaje', { exact: false }).check();
-  await page.getByLabel('Nueva tarifa (USD/h)').fill('20');
-  await page.getByRole('button', { name: 'Guardar configuración', exact: true }).click();
+  await page.getByLabel('¿Cómo te gusta que te llamen?', { exact: false }).fill('José');
+  await page.getByRole('button', { name: 'Guardar mi nombre', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Perfil de José', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Hola, José.', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Hola, José.', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Configuración', exact: true }).click();
+  await page.getByLabel('Confirmé que a mi trabajo', { exact: false }).check();
+  await page.getByLabel('Ya confirmé con mi empleador', { exact: false }).check();
+  await page.getByText('3. Descuentos de tu pago', { exact: true }).click();
+  await page.getByLabel('Confirmé que a mi pago', { exact: false }).check();
+  await page.getByLabel('Ya revisé este porcentaje', { exact: false }).check();
+  await page.getByLabel('¿Cuánto te pagan por hora? (USD)', { exact: true }).fill('20');
+  await page.getByRole('button', { name: 'Guardar mis ajustes', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Guardado');
   await page.getByRole('button', { name: 'Inicio', exact: true }).click();
   await page.getByRole('button', { name: 'Iniciar jornada', exact: true }).click();
@@ -36,8 +45,30 @@ test('registro, reinicio, cálculo, respaldo y restauración', async ({ page, co
   await expect(dialog).not.toBeVisible();
   await page.getByRole('button', { name: 'Resumen', exact: true }).click();
   await expect(page.getByText('10 h 00 min', { exact: true })).toHaveCount(2);
-  await page.getByLabel('Fecha de pago prevista o recibida').fill('2026-10-23');
-  await page.getByLabel('Salarios sujetos a FICA acumulados', { exact: false }).fill('0');
+  await page.getByText('¿Dónde encuentro este dato? ¿Qué es FICA?', { exact: true }).click();
+  await expect(
+    page.getByText('FICA es el nombre de la ley que agrupa', { exact: false }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: 'test-results/' + info.project.name + '-ayuda-recibo.png',
+    fullPage: true,
+  });
+  await page.getByText('¿Dónde encuentro este dato? ¿Qué es FICA?', { exact: true }).click();
+  await page.getByLabel('¿Qué día te pagan?').fill('2026-10-23');
+  await page
+    .getByLabel('Lo que esta empresa ya te pagó este año (USD)', { exact: true })
+    .fill('12500');
+  await page
+    .getByRole('button', { name: 'No sé este dato; lo dejo pendiente', exact: true })
+    .click();
+  await expect(
+    page.getByLabel('Lo que esta empresa ya te pagó este año (USD)', { exact: true }),
+  ).toHaveValue('');
+  await page.getByRole('button', { name: 'Guardar datos del pago', exact: true }).click();
+  await expect(
+    page.getByText('Falta el acumulado del recibo anterior', { exact: false }),
+  ).toBeVisible();
+  await page.getByLabel('Lo que esta empresa ya te pagó este año (USD)', { exact: true }).fill('0');
   await page.getByRole('button', { name: 'Guardar datos del pago', exact: true }).click();
   await expect(page.getByText('$164.70', { exact: true })).toHaveCount(2);
   await page.screenshot({ path: `test-results/${info.project.name}-resumen.png`, fullPage: true });
@@ -60,6 +91,7 @@ test('registro, reinicio, cálculo, respaldo y restauración', async ({ page, co
   await page.getByRole('button', { name: 'Guardar jornada', exact: true }).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await page.getByRole('button', { name: 'Configuración', exact: true }).click();
+  await page.getByText('Copias de mis registros', { exact: true }).click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Guardar respaldo', exact: true }).click();
   const download = await downloadPromise;

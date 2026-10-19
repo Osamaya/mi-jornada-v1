@@ -1,12 +1,16 @@
-import { Capacitor } from '@capacitor/core';
-import { validateState } from '../../domain/work/validate';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { upgradeState, validateState } from '../../domain/work/validate';
 import { money } from '../../domain/money';
 import type { AppState, WeekEstimate } from '../../shared/models';
+
+const LocalFiles = registerPlugin<{
+  saveFile(options: { name: string; contents: string; mime: string }): Promise<{ saved: boolean }>;
+}>('LocalFiles');
 
 export function backupJson(state: AppState): string {
   validateState(state);
   return JSON.stringify(
-    { format: 'mi-jornada-backup', formatVersion: 1, exportedAt: new Date().toISOString(), state },
+    { format: 'mi-jornada-backup', formatVersion: 2, exportedAt: new Date().toISOString(), state },
     null,
     2,
   );
@@ -23,12 +27,13 @@ export function parseBackup(text: string): AppState {
   if (
     !data ||
     data.format !== 'mi-jornada-backup' ||
-    data.formatVersion !== 1 ||
+    ![1, 2].includes(data.formatVersion) ||
     Object.keys(data).sort().join(',') !== 'exportedAt,format,formatVersion,state'
   )
     throw new Error('Formato o versión de respaldo incompatible.');
-  validateState(data.state);
-  return data.state;
+  if (data.state?.schemaVersion !== data.formatVersion)
+    throw new Error('La versión de los datos no coincide con la del respaldo.');
+  return upgradeState(data.state);
 }
 const cell = (value: string | number | null) =>
   `"${String(value ?? '')
@@ -77,21 +82,8 @@ export function csvWeek(state: AppState, estimate: WeekEstimate): string {
   return '\uFEFF' + rows.join('\r\n');
 }
 export async function saveFile(name: string, contents: string, mime: string): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-    const { Share } = await import('@capacitor/share');
-    const file = await Filesystem.writeFile({
-      path: `exports/${name}`,
-      data: contents,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8,
-      recursive: true,
-    });
-    await Share.share({
-      title: 'Mi Jornada',
-      url: file.uri,
-      dialogTitle: 'Guardar o compartir archivo',
-    });
+  if (Capacitor.getPlatform() === 'android') {
+    await LocalFiles.saveFile({ name, contents, mime: mime.split(';')[0] });
   } else {
     const url = URL.createObjectURL(new Blob([contents], { type: mime }));
     const a = document.createElement('a');
