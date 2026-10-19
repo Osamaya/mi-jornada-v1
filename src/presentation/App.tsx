@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as NativeApp } from '@capacitor/app';
 import {
   CalendarDays,
   ChevronRight,
@@ -62,6 +64,26 @@ export default function App() {
     [breakKind, setBreakKind] = useState<'meal-on-duty' | 'short-rest' | 'unpaid-meal'>(
       'meal-on-duty',
     );
+  const navigationState = useRef({ page, editor });
+  navigationState.current = { page, editor };
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') return;
+    const listener = NativeApp.addListener('backButton', () => {
+      const current = navigationState.current;
+      if (current.editor) {
+        setEditor(null);
+      } else if (current.page !== 'home') {
+        setPage('home');
+        setError('');
+        window.scrollTo({ top: 0 });
+      } else {
+        void NativeApp.minimizeApp();
+      }
+    });
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, []);
   async function refresh() {
     try {
       setState(await (await openRepository()).load());
