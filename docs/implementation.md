@@ -15,12 +15,14 @@ src/
   application/
     commands.ts               registro, descansos, correcciones y auditoría
     defaults.ts               perfil inicial sin tarifa inventada
+    demo.ts                   semana ficticia aislada para explorar el resumen
   infrastructure/
     database/                 SQLite nativo, SQLite/WASM web, migración y repositorio
     backup/files.ts           JSON, CSV, selector Android y descarga web
   presentation/
     App.tsx                   inicio, historial y navegación
-    pages/                    configuración y resumen
+    pages/                    configuración, resumen y ejemplo de solo lectura
+    appearance.ts             paleta local y contraste de barras Android
     components/SessionEditor.tsx
     styles.css                vista adaptable y modo del sistema
   shared/models.ts            contratos usados por la implementación
@@ -32,7 +34,9 @@ android/                      proyecto Capacitor y wrapper Gradle
 
 - Entrada/salida, una jornada abierta persistente, descansos pagados y comida libre no pagada.
 - Registro manual, cruce de medianoche, edición con motivo, prevención transaccional de superposición y eliminación lógica auditada.
-- Inicio, historial, resumen y configuración; nombre opcional con saludo e iniciales, azul marino y grises, temas claro/oscuro, texto legible y botones grandes.
+- Inicio, historial, resumen y configuración; nombre opcional con saludo e iniciales, tres paletas profesionales (azul ejecutivo, verde bosque y grafito), temas claro/oscuro, texto legible y botones grandes.
+- Semana de ejemplo de solo lectura, accesible desde Inicio, Configuración o `?demo=week`. Usa el motor real con entradas ficticias y supuestos identificados; no escribe ni importa datos en el repositorio personal. Al volver se recuperan los registros personales.
+- Jornadas del resumen con horario, duración pagada dentro de la semana y comida/pausa sin pago, derivadas de los segmentos del cálculo.
 - Pago explicado como antes/después de descuentos, ayudas accesibles para FICA y datos del recibo, ajustes por secciones desplegables y opción de dejar datos desconocidos pendientes.
 - Historial de tarifa y condiciones por vigencia; cambios de modalidad desde esta semana o una futura, sin reescribir los fichajes ni condiciones de semanas previas.
 - Tiempo observado, pagado/computable, ordinario y extra separados; segmentos de origen y explicación del cálculo.
@@ -51,6 +55,8 @@ Se valida todo el estado antes de cada commit. Sesiones, descansos, tarifas, con
 
 En web hay comparación atómica de revisión en IndexedDB entre pestañas. Una escritura fallida recupera el estado SQLite anterior en memoria. No hay fallback silencioso a memoria ni localStorage. La UI confirma una acción solo después de guardar. Al recuperar foco se recargan los datos. En Android se usa una conexión y transacciones del plugin.
 
+La preferencia visual usa exclusivamente `localStorage` bajo `mi-jornada-color`; queda fuera de SQLite y de los respaldos financieros. Si el almacenamiento visual no está disponible se usa azul; al fallar un cambio se informa y se conserva la selección anterior. Los datos de negocio mantienen la persistencia transaccional descrita. Al abrir SQLite nativo se reconcilian conexiones huérfanas de una recarga de la WebView antes de crear la conexión, conservando el archivo y sus datos.
+
 No hay cifrado adicional configurado. Los datos Android quedan en el almacenamiento privado de la app. La base web depende del almacenamiento del navegador y su perfil; no equivale a un respaldo independiente. Los respaldos exportados contienen datos de horas y dinero y deben conservarse fuera de la app.
 
 ## Límites deliberados
@@ -63,7 +69,7 @@ No hay cifrado adicional configurado. Los datos Android quedan en el almacenamie
 - Reglas laborales desde julio de 2026; deducciones exclusivamente 2026. Se necesita revisar nuevas versiones para otros periodos.
 - Neto aproxima retenciones, no impuesto anual, W-4, declaraciones, beneficios antes de impuestos o deducciones anuales de overtime. La residencia fiscal y el estatus migratorio no se infieren.
 - Límite de importación: 10 MB y 50 000 registros por colección; reemplazo completo, sin mezcla automática.
-- Verificación nativa y piloto de una semana real pendientes.
+- Teléfono físico y piloto de una semana real pendientes; la verificación nativa ejecutada corresponde al emulador API 37.
 
 ## Estado por fases
 

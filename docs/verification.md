@@ -4,20 +4,20 @@ Fecha: 19 de octubre de 2026. Datos de prueba sintéticos, sin usar registros pe
 
 ## Comandos y resultados
 
-| Comprobación                             | Resultado                                                                                                                    |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                               | **62 pruebas aprobadas**, tres archivos: dominio, perfil y repositorio SQLite.                                               |
-| `npm run build`                          | **Correcto**: TypeScript estricto y build Vite de producción en `dist/`.                                                     |
-| `npm run test:e2e`                       | **8 pruebas aprobadas**: dos flujos completos, cuatro de personalización/ayudas y dos de guardado lento, escritorio y móvil. |
-| `npm run format:check`                   | **Correcto**: código y documentación vigentes con formato consistente.                                                       |
-| Arranque del build de producción         | **Correcto** en vista móvil oscura, SQLite/WASM local, sin solicitudes externas ni desbordamiento horizontal.                |
-| `npm exec cap sync android`              | **Correcto**: recursos, SQLite y App sincronizados; `LocalFiles` registrado en la actividad Android.                         |
-| `npm audit`                              | **0 vulnerabilidades reportadas** al cierre, con lockfile actualizado.                                                       |
-| Enlaces relativos Markdown / XML Android | **Correctos** mediante revisión local de archivos y parser XML.                                                              |
-| `:app:assembleDebug`                     | **Correcto**: primera APK debug 1.0.0, `versionCode` 1.                                                                      |
-| `:app:lintDebug`                         | **0 errores y 7 advertencias**: dependencias, recursos sin uso y carpeta de recursos heredada.                               |
-| `apksigner verify --verbose`             | **Correcto**: firma v2 debug válida.                                                                                         |
-| APK en emulador Android 17 / API 37      | **Instalada y verificada** con SQLite nativo, modo avión y selectores reales de archivos.                                    |
+| Comprobación                             | Resultado                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                               | **64 pruebas aprobadas**, cuatro archivos: dominio, perfil, ejemplo y repositorio SQLite.                          |
+| `npm run build`                          | **Correcto**: TypeScript estricto y build Vite de producción en `dist/`.                                           |
+| `npm run test:e2e`                       | **18 pruebas aprobadas**: ocho de los flujos previos, cuatro de paletas y seis del ejemplo, en escritorio y móvil. |
+| `npm run format:check`                   | **Correcto**: código y documentación vigentes con formato consistente.                                             |
+| Arranque del build de producción         | **Correcto** en vista móvil oscura, SQLite/WASM local, sin solicitudes externas ni desbordamiento horizontal.      |
+| `npm exec cap sync android`              | **Correcto**: recursos, SQLite y App sincronizados; `LocalFiles` registrado en la actividad Android.               |
+| `npm audit`                              | **0 vulnerabilidades reportadas** al cierre, con lockfile actualizado.                                             |
+| Enlaces relativos Markdown / XML Android | **Correctos** mediante revisión local de archivos y parser XML.                                                    |
+| `:app:assembleDebug`                     | **Correcto**: primera APK debug 1.0.0, `versionCode` 1.                                                            |
+| `:app:lintDebug`                         | **0 errores y 7 advertencias**: dependencias, recursos sin uso y carpeta de recursos heredada.                     |
+| `apksigner verify --verbose`             | **Correcto**: firma v2 debug válida.                                                                               |
+| APK en emulador Android 17 / API 37      | **Instalada y verificada** con SQLite nativo, modo avión y selectores reales de archivos.                          |
 
 Se corrigió una cadena vulnerable de herramientas fijando Capacitor CLI en 8.4.3. La comprobación no garantiza ausencia futura de vulnerabilidades.
 
@@ -29,6 +29,8 @@ Fiscal: porcentaje federal editable, SS y su tope 2026, Medicare y el cruce del 
 
 Perfil: nombre opcional con acentos, validación de longitud/caracteres, rechazo de perfiles inválidos, conversión de respaldos v1 a v2 sin alterar el archivo original y conservación de jornadas.
 
+Ejemplo semanal: estado ficticio validado, instancias independientes y perfil inicial personal intacto. El cálculo verifica 47.5 horas de presencia, 45 pagadas, 40 normales y 5 extra; base de USD 900, recargo de USD 50 y bruto de USD 950. Con los supuestos del ejemplo verifica Seguro Social USD 58.90, Medicare USD 13.78, federal USD 95, otros USD 15 y neto USD 767.32.
+
 Repositorio SQLite: migraciones 1 y 2, actualización de una base v1 conservando jornadas, persistencia del nombre, recuperación de jornada abierta desde la base, edición/auditoría atómicas, revisión obsoleta, solapamientos, rollback por falla de escritura, copia previa de restauración y rechazo de respaldo inválido o vista previa obsoleta.
 
 Navegador en ambos tamaños: configurar, guardar nombre y recuperar el saludo tras recargar, fichar, recargar con jornada abierta, finalizar sin red después de cargar los recursos, registro manual, cálculo bruto/neto, dejar el acumulado previo pendiente sin convertirlo en cero, editar con motivo, conservar segundos originales al cambiar solo la nota, descargar JSON, rechazar JSON corrupto y restaurar con confirmación.
@@ -36,6 +38,8 @@ Navegador en ambos tamaños: configurar, guardar nombre y recuperar el saludo tr
 Experiencia: nombres largos, ayudas FICA por toque y teclado, descuentos inicialmente plegados, campos de al menos 16 px y temas claro/oscuro. Escritorio de 1440 px, Pixel 7 y pruebas de experiencia a 360 px. Sin errores JavaScript detectados y sin desbordamiento horizontal en las vistas revisadas. Capturas en `test-results/` (excluidas de Git) se inspeccionaron visualmente.
 
 La regresión de guardado lento retiene la confirmación de IndexedDB: comprueba el estado “Guardando…”, controles deshabilitados hasta terminar y conservación de un acumulado explícito de cero después de recargar. No se sustituye el cero por un dato pendiente.
+
+Paletas y ejemplo: comparación de las tres paletas, persistencia del color y nombre tras recargar, temas claro/oscuro y ausencia de desbordamiento a 360 px. Entrar al ejemplo, explorar horario/ayudas, recargar y volver conserva el nombre y una jornada personal creada antes de la visita. Abrir directamente `?demo=week` no crea la base IndexedDB personal. Se verifican las cinco jornadas, las comidas sin pago y los importes calculados; no se ofrecen guardado de pagos ni exportación de los datos ficticios.
 
 ## Verificación nativa ejecutada
 
@@ -56,7 +60,13 @@ Emulador `Medium_Phone_API_37.0`, Android 17 / API 37, WebView 145.0.7632.218, p
 
 Se comprobó el manifiesto combinado generado por Gradle: `allowBackup=false`, `fullBackupContent=false`, reglas que excluyen backup/transferencia, sin permisos de Internet, ubicación, biometría ni almacenamiento general. Se eliminó la dependencia del menú Compartir para guardar archivos locales. No se detectaron errores JavaScript en el flujo completo ni excepciones fatales de Android en la comprobación del reinicio.
 
-La APK local está en `artifacts/MiJornada-1.0.0-debug.apk`, con SHA-256 en el mismo directorio. APK, capturas, respaldos sintéticos y herramientas temporales se excluyen de Git; las capturas Android quedan en `.tools/android-validation/`. El APK no incluye los registros de prueba del emulador.
+La primera APK local está en `artifacts/MiJornada-1.0.0-debug.apk`, con SHA-256 en el mismo directorio. APK, capturas, respaldos sintéticos y herramientas temporales se excluyen de Git; las capturas Android quedan en `.tools/android-validation/`. El APK no incluye los registros de prueba del emulador.
+
+### Comprobación adicional de colores y ejemplo
+
+Se recompiló, verificó la firma v2 e instaló con `adb install -r` la APK `artifacts/MiJornada-1.0.0-ux-debug.apk` (13 698 707 bytes). Mantiene la versión de desarrollo 1.0.0 / código 1. En el mismo emulador API 37 se verificaron las cinco jornadas, medias horas sin pago, bruto USD 950 y neto USD 767.32, las tres paletas y su conservación tras recargar. Se revisó la vista sin desbordamiento en ambos temas y la captura completa del dispositivo en el tema activo.
+
+La primera ejecución detectó `Connection mijornada already exists` al recargar la WebView en el ejemplo y volver a los registros. Se corrigió reconciliando las conexiones nativas antes de abrir SQLite. La repetición completa pasó, incluido Atrás de Android: todas las filas de las tablas personales se compararon antes y después y resultaron idénticas. No se borraron datos del emulador. Se dejó el ejemplo abierto para revisión. Los flujos completos de respaldo, restauración y reinicio descritos arriba corresponden a la primera APK; esta comprobación adicional cubre los cambios de interfaz y reapertura.
 
 ## Límites de la verificación
 

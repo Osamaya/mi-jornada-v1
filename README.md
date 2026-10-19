@@ -28,7 +28,13 @@ Playwright usa Edge si está instalado en la ruta habitual. En otro equipo, inst
 
 En Configuración puedes guardar tu nombre o apodo. Es opcional: personaliza el saludo y el perfil, se conserva en el dispositivo y viaja con tus respaldos. Las copias de la versión anterior se actualizan al restaurarlas sin perder las jornadas.
 
-La interfaz usa “antes de descuentos” y “después de descuentos” para explicar el pago bruto y neto. Las ayudas se abren al tocar “¿Qué significa?” o la pregunta correspondiente; funcionan también con teclado. En los datos del recibo se explica FICA, dónde buscar el acumulado del recibo anterior y cómo dejarlo pendiente sin adivinar un cero. Los descuentos y respaldos están en secciones desplegables para completar cuando se necesiten. La presentación usa azul marino y grises, modo claro/oscuro según el sistema, campos con texto de al menos 16 px y navegación adaptada a móvil.
+La interfaz usa “antes de descuentos” y “después de descuentos” para explicar el pago bruto y neto. Las ayudas se abren al tocar “¿Qué significa?” o la pregunta correspondiente; funcionan también con teclado. En los datos del recibo se explica FICA, dónde buscar el acumulado del recibo anterior y cómo dejarlo pendiente sin adivinar un cero. Los descuentos y respaldos están en secciones desplegables para completar cuando se necesiten. En **Elige tu color** puedes comparar azul ejecutivo, verde bosque y grafito, todos con modo claro/oscuro según el sistema. El color se guarda solo en el dispositivo y no forma parte del respaldo de jornadas. Los campos tienen texto de al menos 16 px y la navegación se adapta a móvil.
+
+### Ver una semana completa
+
+Desde Inicio o Configuración, tocar **Ver una semana de ejemplo**. En desarrollo también se puede abrir `http://127.0.0.1:5173/?demo=week`. Es una vista de solo lectura con datos ficticios, separada de los registros personales; abrirla directamente no crea una base de datos personal. **Mis registros** permite regresar.
+
+El ejemplo abarca del 12 al 18 de octubre de 2026: cinco jornadas de 8:00 a 17:30 con media hora de comida sin pago por día y tarifa de USD 20/h. Muestra 45 horas pagadas, 40 normales y 5 extra: **USD 950 antes de descuentos**. Con los supuestos explícitos de 10 % federal, USD 15 en otros descuentos y USD 10 000 acumulados previamente, el motor calcula **USD 767.32 después de descuentos**. Son datos ilustrativos; no se copian a tu configuración. Cada jornada muestra horario, comida sin pago y tiempo pagado dentro de la semana.
 
 En Android, Atrás cierra el editor o vuelve al inicio; desde el inicio deja la aplicación en segundo plano. Los pagos muestran “Guardando…” hasta confirmar la escritura. El respaldo JSON y el resumen CSV usan el selector de Android para guardar en una carpeta elegida, por ejemplo Descargas, sin otra aplicación ni permisos generales de almacenamiento.
 
@@ -88,8 +94,8 @@ No existe sincronización cloud ni cifrado adicional configurado. Android usa al
 
 | Comprobación                                               | Resultado                                   |
 | ---------------------------------------------------------- | ------------------------------------------- |
-| Vitest: dominio, perfil y SQLite                           | 62 pruebas aprobadas                        |
-| Playwright: escritorio y móvil, claro y oscuro             | 8 pruebas aprobadas                         |
+| Vitest: dominio, perfil, ejemplo y SQLite                  | 64 pruebas aprobadas                        |
+| Playwright: escritorio y móvil, claro y oscuro             | 18 pruebas aprobadas                        |
 | TypeScript y build Vite                                    | Correctos                                   |
 | Arranque del build, móvil oscuro, sin solicitudes externas | Correcto                                    |
 | Auditoría de dependencias                                  | 0 vulnerabilidades reportadas al 19/10/2026 |
@@ -99,7 +105,7 @@ No existe sincronización cloud ni cifrado adicional configurado. Android usa al
 | Emulador Android 17, modo avión y SQLite nativo            | Verificado                                  |
 | Teléfono físico / piloto con recibo real                   | Pendientes                                  |
 
-La APK local se entrega en `artifacts/MiJornada-1.0.0-debug.apk`, excluida de Git, junto con su SHA-256. Para reproducirla, seguir la [guía de compilación e instalación](docs/android.md). El SDK necesario ya está instalado y se compiló con JDK 24. Es una versión para pruebas firmada con la clave debug del equipo; la firma definitiva de distribución sigue pendiente.
+La APK actual con selección de colores y semana de ejemplo está en `artifacts/MiJornada-1.0.0-ux-debug.apk`, con SHA-256 en el mismo directorio. Se instaló y comprobó en el emulador, incluida la vuelta del ejemplo tras recargar sin alterar las tablas personales. La primera compilación se conserva en `artifacts/MiJornada-1.0.0-debug.apk`. Ambas son builds de desarrollo 1.0.0, excluidas de Git. Para reproducir la actual, seguir la [guía de compilación e instalación](docs/android.md). El SDK necesario ya está instalado y se compiló con JDK 24. Se usa la clave debug del equipo; la firma definitiva de distribución sigue pendiente.
 
 ## Repositorio
 

@@ -41,7 +41,15 @@ Salida de la compilación exitosa:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-La copia para instalar se encuentra en `artifacts/MiJornada-1.0.0-debug.apk`; el archivo `.sha256` del mismo directorio permite comprobarla. Son artefactos locales excluidos de Git. La APK contiene las arquitecturas arm64-v8a, armeabi-v7a, x86 y x86_64; declara Android mínimo API 24 y target API 36. La ejecución nativa se comprobó en API 37.
+La copia actual para instalar se encuentra en `artifacts/MiJornada-1.0.0-ux-debug.apk`; incluye selección de colores, semana de ejemplo y reapertura SQLite después de recargar la WebView. Se conserva la primera compilación en `artifacts/MiJornada-1.0.0-debug.apk`. Ambas usan `versionName` 1.0.0 y `versionCode` 1, como compilaciones de desarrollo. El archivo `.sha256` de cada APK permite comprobarla. Son artefactos locales excluidos de Git. La APK contiene las arquitecturas arm64-v8a, armeabi-v7a, x86 y x86_64; declara Android mínimo API 24 y target API 36. La ejecución nativa se comprobó en API 37.
+
+Huella SHA-256 de la compilación actual:
+
+```text
+f85300f847eda46780a1cecbc3e877c79bc1014158842e4d15a3c29161532d58
+```
+
+Para verla desde Android Studio, seleccionar el emulador y pulsar **Run ▶** después de `npm run android:sync`. Ya se instaló la compilación actual en el emulador conectado y se dejó abierta la semana de ejemplo. El selector **Elige tu color** permite comparar las tres paletas. El botón **Mis registros** o Atrás devuelve a los datos personales; el ejemplo no los reemplaza.
 
 El debug se firma con la clave de desarrollo del equipo. `apksigner verify --verbose` confirmó una firma v2 válida. Es adecuado para probar; no establece la firma definitiva de distribución. El APK contiene código y recursos, sin los datos sintéticos de la instalación del emulador.
 
