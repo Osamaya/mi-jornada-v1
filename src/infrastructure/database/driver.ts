@@ -116,6 +116,9 @@ export async function openDriver(): Promise<Driver> {
   if (!Capacitor.isNativePlatform()) return webDriver();
   const { CapacitorSQLite, SQLiteConnection } = await import('@capacitor-community/sqlite');
   const sqlite = new SQLiteConnection(CapacitorSQLite);
+  // Una recarga de la WebView pierde el registro JS, pero conserva conexiones nativas.
+  // Reconciliarlas cierra las huérfanas antes de volver a abrir la misma base.
+  await sqlite.checkConnectionsConsistency();
   const db = await sqlite.createConnection('mijornada', false, 'no-encryption', 1, false);
   await db.open();
   await db.execute('PRAGMA foreign_keys = ON;', false);
