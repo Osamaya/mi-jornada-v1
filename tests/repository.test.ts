@@ -49,13 +49,26 @@ beforeEach(async () => {
 });
 const now = localInstant('2026-10-19T08:00');
 describe('SQLite y transacciones del repositorio real', () => {
+  test('migra una instalación v1 con jornada abierta y añade nombre sin perder datos', async () => {
+    let state = await repository.load();
+    state = await repository.update(state.revision, (s) => startSession(s, now));
+    db.exec('DROP TABLE user_profile; DELETE FROM schema_migrations WHERE version=2;');
+    const migrated = await repository.load();
+    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.profile.displayName).toBe('');
+    expect(migrated.sessions).toEqual(state.sessions);
+    const named = await repository.update(migrated.revision, (s) => {
+      s.profile.displayName = 'José';
+    });
+    expect((await repository.load()).profile).toEqual(named.profile);
+  });
   test('migra, inicia y recupera una jornada abierta desde SQLite', async () => {
     const state = await repository.load();
     const next = await repository.update(state.revision, (s) => startSession(s, now));
     const loaded = await repository.load();
     expect(loaded.sessions).toEqual(next.sessions);
     expect(loaded.sessions[0].endMs).toBeNull();
-    expect(db.exec('SELECT count(*) FROM schema_migrations')[0].values[0][0]).toBe(1);
+    expect(db.exec('SELECT count(*) FROM schema_migrations')[0].values[0][0]).toBe(2);
   });
   test('corrección y auditoría tienen un solo commit', async () => {
     let state = await repository.load();

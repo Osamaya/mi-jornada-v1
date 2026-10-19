@@ -41,7 +41,7 @@ android/                      proyecto Capacitor y wrapper Gradle
 
 ## Persistencia
 
-En Android se usa `@capacitor-community/sqlite`; en web, `sql.js` con WASM empaquetado localmente y copia durable en IndexedDB. No hay servidor de datos. La versión de esquema instalada es 1 y se registra en `schema_migrations`; su fuente está en `src/infrastructure/database/schema.ts`.
+En Android se usa `@capacitor-community/sqlite`; en web, `sql.js` con WASM empaquetado localmente y copia durable en IndexedDB. No hay servidor de datos. La versión de esquema instalada es 2 y se registra en `schema_migrations`; su fuente está en `src/infrastructure/database/schema.ts`. La migración añade un nombre opcional sin modificar jornadas. El respaldo v2 conserva ese nombre y acepta la conversión validada de respaldos v1.
 
 Se valida todo el estado antes de cada commit. Sesiones, descansos, tarifas, configuraciones, pagos y auditoría se guardan en una transacción con revisión optimista. Para el volumen de un perfil personal, el repositorio reescribe sus tablas de datos en cada transacción; conserva las copias de recuperación aparte. Conviene optimizar escrituras incrementales antes de extenderlo a volúmenes grandes.
 

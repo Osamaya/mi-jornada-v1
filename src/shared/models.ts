@@ -62,8 +62,9 @@ export interface AuditEvent {
   afterJson: string | null;
 }
 export interface AppState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   revision: number;
+  profile: { displayName: string };
   employment: EmploymentSettings[];
   payroll: PayrollSettings[];
   rates: PayRate[];

@@ -1,9 +1,9 @@
 import type { AppState } from '../../shared/models';
 import { initialState } from '../../application/defaults';
 import { audit, uid } from '../../application/commands';
-import { validateState } from '../../domain/work/validate';
+import { upgradeState, validateState } from '../../domain/work/validate';
 import type { Driver } from './driver';
-import { migration1 } from './schema';
+import { migration1, migration2 } from './schema';
 
 const tables = {
   employment: 'employment_settings',
@@ -25,10 +25,14 @@ export class Repository {
   private async migrate() {
     await this.driver.execute(migration1);
     const versions = await this.driver.query('SELECT version FROM schema_migrations');
-    if (versions.some((v) => v.version !== 1))
+    if (versions.some((v) => v.version !== 1 && v.version !== 2))
       throw new Error('La base requiere una versión más reciente de Mi Jornada.');
     if (!versions.length)
       await this.driver.run('INSERT INTO schema_migrations VALUES(1,?)', [Date.now()]);
+    if (!versions.some((v) => v.version === 2)) {
+      await this.driver.execute(migration2);
+      await this.driver.run('INSERT INTO schema_migrations VALUES(2,?)', [Date.now()]);
+    }
   }
   private async read(): Promise<AppState | null> {
     const revision = (
@@ -36,8 +40,14 @@ export class Repository {
     )[0]?.revision;
     if (revision === undefined) return null;
     const state: AppState = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       revision: Number(revision),
+      profile: {
+        displayName: String(
+          (await this.driver.query('SELECT display_name FROM user_profile WHERE singleton=1'))[0]
+            ?.display_name ?? '',
+        ),
+      },
       employment: [],
       payroll: [],
       rates: [],
@@ -56,6 +66,9 @@ export class Repository {
     return state;
   }
   private async write(state: AppState) {
+    await this.driver.run('INSERT OR REPLACE INTO user_profile VALUES(1,?)', [
+      state.profile.displayName,
+    ]);
     // Reemplazo pequeño y atómico de un único perfil; conserva recovery_snapshots.
     for (const table of [
       'break_periods',
@@ -189,9 +202,7 @@ export class Repository {
         )
       )[0];
       if (!row) return null;
-      const data = JSON.parse(String(row.payload));
-      validateState(data);
-      return data;
+      return upgradeState(JSON.parse(String(row.payload)));
     });
   }
 }

@@ -44,6 +44,7 @@ export function validateState(value: unknown): asserts value is AppState {
   obj(value, [
     'schemaVersion',
     'revision',
+    'profile',
     'employment',
     'payroll',
     'rates',
@@ -52,7 +53,16 @@ export function validateState(value: unknown): asserts value is AppState {
     'payments',
     'audit',
   ]);
-  choice(value.schemaVersion, [1]);
+  choice(value.schemaVersion, [2]);
+  obj(value.profile, ['displayName']);
+  text(value.profile.displayName, 60);
+  if (
+    value.profile.displayName !== value.profile.displayName.trim() ||
+    /[\p{Cc}\p{Cf}]/u.test(value.profile.displayName)
+  )
+    fail(
+      'El nombre debe tener hasta 60 caracteres, sin saltos de línea ni espacios al inicio o al final.',
+    );
   integer(value.revision, 1, Number.MAX_SAFE_INTEGER);
   for (const key of ['employment', 'payroll', 'rates', 'sessions', 'breaks', 'payments', 'audit']) {
     if (!Array.isArray(value[key]) || value[key].length > 50000)
@@ -210,4 +220,16 @@ export function validateState(value: unknown): asserts value is AppState {
         }
       }
   }
+}
+
+/** Convierte respaldos anteriores sin alterar sus jornadas, tarifas o auditoría. */
+export function upgradeState(value: unknown): AppState {
+  if (value && typeof value === 'object' && 'schemaVersion' in value && value.schemaVersion === 1) {
+    if ('profile' in value) fail('El respaldo anterior contiene campos incompatibles.');
+    const upgraded = { ...value, schemaVersion: 2, profile: { displayName: '' } };
+    validateState(upgraded);
+    return upgraded;
+  }
+  validateState(value);
+  return structuredClone(value);
 }

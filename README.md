@@ -26,6 +26,8 @@ Playwright usa Edge si está instalado en la ruta habitual. En otro equipo, inst
 
 ## Uso inicial
 
+En Configuración puedes guardar tu nombre o apodo. Es opcional: personaliza el saludo y el perfil, se conserva en el dispositivo y viaja con tus respaldos. Las copias de la versión anterior se actualizan al restaurarlas sin perder las jornadas.
+
 1. Configurar tarifa y vigencia; confirmar semana laboral y aplicabilidad del perfil de empleado cubierto no exento.
 2. Iniciar/finalizar jornada o agregar registros manuales. La comida pagada con obligaciones no se descuenta.
 3. Consultar Resumen. Para el neto, confirmar las deducciones e ingresar fecha de pago y salarios acumulados previos de ese empleador según recibo. No se supone cero.

@@ -1,12 +1,12 @@
 import { Capacitor } from '@capacitor/core';
-import { validateState } from '../../domain/work/validate';
+import { upgradeState, validateState } from '../../domain/work/validate';
 import { money } from '../../domain/money';
 import type { AppState, WeekEstimate } from '../../shared/models';
 
 export function backupJson(state: AppState): string {
   validateState(state);
   return JSON.stringify(
-    { format: 'mi-jornada-backup', formatVersion: 1, exportedAt: new Date().toISOString(), state },
+    { format: 'mi-jornada-backup', formatVersion: 2, exportedAt: new Date().toISOString(), state },
     null,
     2,
   );
@@ -23,12 +23,13 @@ export function parseBackup(text: string): AppState {
   if (
     !data ||
     data.format !== 'mi-jornada-backup' ||
-    data.formatVersion !== 1 ||
+    ![1, 2].includes(data.formatVersion) ||
     Object.keys(data).sort().join(',') !== 'exportedAt,format,formatVersion,state'
   )
     throw new Error('Formato o versión de respaldo incompatible.');
-  validateState(data.state);
-  return data.state;
+  if (data.state?.schemaVersion !== data.formatVersion)
+    throw new Error('La versión de los datos no coincide con la del respaldo.');
+  return upgradeState(data.state);
 }
 const cell = (value: string | number | null) =>
   `"${String(value ?? '')

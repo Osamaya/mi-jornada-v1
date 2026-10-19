@@ -10,6 +10,14 @@ test('registro, reinicio, cálculo, respaldo y restauración', async ({ page, co
   await expect(page.getByRole('button', { name: 'Iniciar jornada', exact: true })).toBeVisible();
   await page.screenshot({ path: `test-results/${info.project.name}-inicio.png`, fullPage: true });
   await page.getByRole('button', { name: 'Configuración', exact: true }).click();
+  await page.getByLabel('¿Cómo te gusta que te llamen?', { exact: false }).fill('José');
+  await page.getByRole('button', { name: 'Guardar mi nombre', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Perfil de José', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Hola, José.', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Hola, José.', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Configuración', exact: true }).click();
   await page.getByLabel('Confirmé que soy empleado', { exact: false }).check();
   await page.getByLabel('Confirmé con mi empleador', { exact: false }).check();
   await page.getByLabel('Mi nómina está sujeta', { exact: false }).check();

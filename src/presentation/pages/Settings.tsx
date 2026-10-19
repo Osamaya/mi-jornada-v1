@@ -17,6 +17,7 @@ import {
 } from '../../domain/time';
 import { money, parseMoney, parsePercent } from '../../domain/money';
 import { backupJson, parseBackup, saveFile } from '../../infrastructure/backup/files';
+import { ProfileCard } from '../components/ProfileCard';
 
 export function Settings({
   state,
@@ -111,6 +112,7 @@ export function Settings({
         <h1>Configuración</h1>
         <p>Unos datos para que las cuentas sean más claras.</p>
       </div>
+      <ProfileCard state={state} update={update} />
       <form onSubmit={save} className="settings-form">
         <section className="card">
           <h2>Tu trabajo</h2>

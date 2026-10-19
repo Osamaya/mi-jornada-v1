@@ -36,6 +36,7 @@ import {
 import { SessionEditor } from './components/SessionEditor';
 import { Settings } from './pages/Settings';
 import { Summary } from './pages/Summary';
+import { initials } from './components/ProfileCard';
 
 let repositoryPromise: Promise<Repository> | undefined;
 function openRepository() {
@@ -175,7 +176,12 @@ export default function App() {
         >
           <span className="brand-mark">MJ</span>
           <span>
-            Mi Jornada<small>Tu tiempo cuenta.</small>
+            Mi Jornada
+            <small>
+              {state.profile.displayName
+                ? `El espacio de ${state.profile.displayName}`
+                : 'Tu espacio personal'}
+            </small>
           </span>
         </a>
         <nav aria-label="Navegación principal">
@@ -208,9 +214,23 @@ export default function App() {
           <span className="location">
             <span className="status-dot" /> Las Vegas, Nevada
           </span>
-          <span className="private-pill">
-            <LockKeyhole size={14} /> Datos locales
-          </span>
+          <button
+            className="account-button"
+            onClick={() => go('settings')}
+            aria-label={
+              state.profile.displayName
+                ? `Perfil de ${state.profile.displayName}`
+                : 'Personalizar mi nombre'
+            }
+          >
+            <span className="account-copy">
+              <strong>{state.profile.displayName || 'Tu espacio'}</strong>
+              <small>Solo en este dispositivo</small>
+            </span>
+            <span className="profile-avatar" aria-hidden="true">
+              {initials(state.profile.displayName)}
+            </span>
+          </button>
         </header>
         <main className="main-content" aria-busy={busy}>
           {error && (
@@ -234,8 +254,17 @@ export default function App() {
                   <span className="eyebrow">
                     {formatDate(now, { weekday: 'long', year: 'numeric' }).toUpperCase()}
                   </span>
-                  <h1>Tu tiempo cuenta.</h1>
-                  <p>Registra tu jornada. Ten tus cuentas a la mano.</p>
+                  <h1 className="personal-greeting">
+                    {state.profile.displayName
+                      ? `Hola, ${state.profile.displayName}.`
+                      : 'Tu jornada, a tu manera.'}
+                  </h1>
+                  <p>Tu tiempo y tu pago, en orden.</p>
+                  {!state.profile.displayName && (
+                    <button className="text-button personalize-link" onClick={() => go('settings')}>
+                      Agrega tu nombre y hazla tuya <ChevronRight size={15} />
+                    </button>
+                  )}
                 </div>
                 <span className="date-badge">
                   <CalendarDays size={19} />
@@ -535,7 +564,7 @@ export default function App() {
           )}
           {page === 'settings' && (
             <Settings
-              key={state.revision}
+              key={`${atDate(state.employment, now)!.id}-${atDate(state.payroll, now)!.id}-${state.rates.map((r) => r.id).join('-')}`}
               state={state}
               update={update}
               restore={async (imported) => {
