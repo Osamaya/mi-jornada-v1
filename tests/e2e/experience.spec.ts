@@ -66,3 +66,44 @@ for (const theme of ['light', 'dark'] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+test('el pago indica que está guardando y conserva el cero explícito tras recargar', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Resumen', exact: true }).click();
+  const wages = page.getByLabel('Lo que esta empresa ya te pagó este año (USD)', { exact: true });
+  await wages.fill('0');
+  // Retener la confirmación de IndexedDB reproduce una escritura nativa lenta.
+  await page.evaluate(() => {
+    const original = Object.getOwnPropertyDescriptor(IDBTransaction.prototype, 'oncomplete')!;
+    Object.defineProperty(IDBTransaction.prototype, 'oncomplete', {
+      ...original,
+      set(handler: (this: IDBTransaction, event: Event) => void) {
+        original.set!.call(this, function (this: IDBTransaction, event: Event) {
+          Object.defineProperty(IDBTransaction.prototype, 'oncomplete', original);
+          (window as Window & { releaseSave?: () => void }).releaseSave = () =>
+            handler.call(this, event);
+        });
+      },
+    });
+  });
+  await page.getByRole('button', { name: 'Guardar datos del pago', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Guardando…', exact: true })).toBeDisabled();
+  await expect(wages).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'No sé este dato; lo dejo pendiente', exact: true }),
+  ).toBeDisabled();
+  await expect
+    .poll(() =>
+      page.evaluate(() => typeof (window as Window & { releaseSave?: () => void }).releaseSave),
+    )
+    .toBe('function');
+  await page.evaluate(() => (window as Window & { releaseSave?: () => void }).releaseSave!());
+  await expect(
+    page.getByRole('button', { name: 'Guardar datos del pago', exact: true }),
+  ).toBeEnabled();
+  await page.reload();
+  await page.getByRole('button', { name: 'Resumen', exact: true }).click();
+  await expect(wages).toHaveValue('0.00');
+});

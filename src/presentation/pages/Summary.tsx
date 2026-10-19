@@ -29,6 +29,7 @@ export function Summary({
   onSettings: () => void;
 }) {
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const payment = state.payments.find((p) => p.weekStartMs === estimate.week.startMs);
   const [priorWages, setPriorWages] = useState(
     payment?.ytdBeforeCents == null ? '' : (payment.ytdBeforeCents / 100).toFixed(2),
@@ -36,6 +37,8 @@ export function Summary({
   const settings = atDate(state.payroll, estimate.week.startMs)!;
   async function savePayment(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     setError('');
     try {
       const f = new FormData(e.currentTarget),
@@ -54,6 +57,8 @@ export function Summary({
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar.');
+    } finally {
+      setSaving(false);
     }
   }
   const sessions = state.sessions
@@ -204,13 +209,24 @@ export function Summary({
             Estos datos ayudan a calcular lo que queda después de los descuentos. Si no los tienes,
             tus horas y tu pago antes de descuentos siguen disponibles.
           </p>
-          <form onSubmit={savePayment} key={payment?.id ?? estimate.week.startMs}>
+          <form
+            onSubmit={savePayment}
+            key={payment?.id ?? estimate.week.startMs}
+            aria-busy={saving}
+          >
             <label htmlFor="pay-date">¿Qué día te pagan?</label>
-            <input id="pay-date" type="date" name="payDate" defaultValue={payment?.payDate ?? ''} />
+            <input
+              id="pay-date"
+              type="date"
+              name="payDate"
+              defaultValue={payment?.payDate ?? ''}
+              disabled={saving}
+            />
             <label htmlFor="prior-wages">Lo que esta empresa ya te pagó este año (USD)</label>
             <input
               id="prior-wages"
               name="ytd"
+              disabled={saving}
               inputMode="decimal"
               placeholder="Puedes dejarlo pendiente"
               value={priorWages}
@@ -243,6 +259,7 @@ export function Summary({
             <button
               type="button"
               className="text-button unknown-value"
+              disabled={saving}
               onClick={() => setPriorWages('')}
             >
               No sé este dato; lo dejo pendiente
@@ -251,6 +268,7 @@ export function Summary({
             <input
               id="received-pay"
               name="received"
+              disabled={saving}
               inputMode="decimal"
               placeholder="El dinero que recibiste o te depositaron"
               defaultValue={
@@ -263,7 +281,9 @@ export function Summary({
                 {error}
               </p>
             )}
-            <button className="primary">Guardar datos del pago</button>
+            <button className="primary" disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar datos del pago'}
+            </button>
           </form>
           {payment?.receivedNetCents != null && (
             <div className="comparison">
