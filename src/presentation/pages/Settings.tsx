@@ -19,17 +19,21 @@ import { money, parseMoney, parsePercent } from '../../domain/money';
 import { backupJson, parseBackup, saveFile } from '../../infrastructure/backup/files';
 import { ProfileCard } from '../components/ProfileCard';
 import { HelpHint } from '../components/HelpHint';
+import { AppearanceCard } from '../components/AppearanceCard';
+import type { useAppearance } from '../appearance';
 
 export function Settings({
   state,
   update,
   restore,
   exportRecovery,
+  appearance,
 }: {
   state: AppState;
   update: (mutate: (s: AppState) => void) => Promise<boolean>;
   restore: (s: AppState) => Promise<boolean>;
   exportRecovery: () => Promise<void>;
+  appearance: ReturnType<typeof useAppearance>;
 }) {
   const now = Date.now(),
     current = atDate(state.employment, now)!,
@@ -114,6 +118,7 @@ export function Settings({
         <p>Tu nombre, tu pago y tus horarios. Un paso a la vez.</p>
       </div>
       <ProfileCard state={state} update={update} />
+      <AppearanceCard {...appearance} />
       <div className="setup-guide">
         <strong>Primero, lo básico</strong>
         <p>

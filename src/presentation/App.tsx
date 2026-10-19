@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { App as NativeApp } from '@capacitor/app';
 import {
   CalendarDays,
@@ -39,6 +39,7 @@ import { SessionEditor } from './components/SessionEditor';
 import { Settings } from './pages/Settings';
 import { Summary } from './pages/Summary';
 import { initials } from './components/ProfileCard';
+import { useAppearance } from './appearance';
 
 let repositoryPromise: Promise<Repository> | undefined;
 function openRepository() {
@@ -53,6 +54,7 @@ const navigation = [
 ] as const;
 
 export default function App() {
+  const appearance = useAppearance();
   const [state, setState] = useState<AppState | null>(null),
     [page, setPage] = useState<Page>('home'),
     [error, setError] = useState(''),
@@ -68,14 +70,6 @@ export default function App() {
   navigationState.current = { page, editor };
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'android') return;
-    const theme = window.matchMedia('(prefers-color-scheme: dark)');
-    const syncSystemBars = () => {
-      void SystemBars.setStyle({
-        style: theme.matches ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
-      });
-    };
-    syncSystemBars();
-    theme.addEventListener('change', syncSystemBars);
     const listener = NativeApp.addListener('backButton', () => {
       const current = navigationState.current;
       if (current.editor) {
@@ -89,7 +83,6 @@ export default function App() {
       }
     });
     return () => {
-      theme.removeEventListener('change', syncSystemBars);
       void listener.then((handle) => handle.remove());
     };
   }, []);
@@ -616,6 +609,7 @@ export default function App() {
           )}
           {page === 'settings' && (
             <Settings
+              appearance={appearance}
               key={`${atDate(state.employment, now)!.id}-${atDate(state.payroll, now)!.id}-${state.rates.map((r) => r.id).join('-')}`}
               state={state}
               update={update}
