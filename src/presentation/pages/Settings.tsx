@@ -28,12 +28,14 @@ export function Settings({
   restore,
   exportRecovery,
   appearance,
+  onExample,
 }: {
   state: AppState;
   update: (mutate: (s: AppState) => void) => Promise<boolean>;
   restore: (s: AppState) => Promise<boolean>;
   exportRecovery: () => Promise<void>;
   appearance: ReturnType<typeof useAppearance>;
+  onExample: () => void;
 }) {
   const now = Date.now(),
     current = atDate(state.employment, now)!,
@@ -487,6 +489,16 @@ export function Settings({
           )}
         </div>
       </details>
+      <section className="card demo-invitation">
+        <h2>Así se ve una semana completa</h2>
+        <p className="muted">
+          Explora un ejemplo con horas extra, comidas y descuentos antes de registrar tu propia
+          semana.
+        </p>
+        <button className="secondary" onClick={onExample}>
+          Ver una semana de ejemplo
+        </button>
+      </section>
     </>
   );
 }

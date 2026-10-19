@@ -40,6 +40,7 @@ import { Settings } from './pages/Settings';
 import { Summary } from './pages/Summary';
 import { initials } from './components/ProfileCard';
 import { useAppearance } from './appearance';
+import { DemoWeek } from './pages/DemoWeek';
 
 let repositoryPromise: Promise<Repository> | undefined;
 function openRepository() {
@@ -54,6 +55,31 @@ const navigation = [
 ] as const;
 
 export default function App() {
+  const isExample = () => new URLSearchParams(location.search).get('demo') === 'week';
+  const [example, setExample] = useState(isExample);
+  useEffect(() => {
+    const onPopState = () => setExample(isExample());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  function changeExample(show: boolean) {
+    const url = new URL(location.href);
+    if (show) url.searchParams.set('demo', 'week');
+    else url.searchParams.delete('demo');
+    url.hash = '';
+    if (show) history.pushState(null, '', url);
+    else history.replaceState(null, '', url);
+    setExample(show);
+    window.scrollTo({ top: 0 });
+  }
+  return example ? (
+    <DemoWeek onClose={() => changeExample(false)} />
+  ) : (
+    <PersonalApp onExample={() => changeExample(true)} />
+  );
+}
+
+function PersonalApp({ onExample }: { onExample: () => void }) {
   const appearance = useAppearance();
   const [state, setState] = useState<AppState | null>(null),
     [page, setPage] = useState<Page>('home'),
@@ -492,6 +518,9 @@ export default function App() {
                 <LockKeyhole size={14} /> Tus registros permanecen en este dispositivo. El pago
                 mostrado es una estimación.
               </p>
+              <button className="text-button demo-link" onClick={onExample}>
+                Ver una semana de ejemplo <ChevronRight size={17} />
+              </button>
             </>
           )}
           {page === 'history' && (
@@ -609,6 +638,7 @@ export default function App() {
           )}
           {page === 'settings' && (
             <Settings
+              onExample={onExample}
               appearance={appearance}
               key={`${atDate(state.employment, now)!.id}-${atDate(state.payroll, now)!.id}-${state.rates.map((r) => r.id).join('-')}`}
               state={state}

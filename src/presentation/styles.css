@@ -33,6 +33,123 @@
 .appearance-card {
   margin-bottom: 24px;
 }
+.demo-shell .main-content {
+  max-width: 1120px;
+}
+.demo-shell .demo-topbar {
+  gap: 12px;
+  height: auto;
+  min-height: 78px;
+  padding-block: calc(16px + env(safe-area-inset-top)) 16px;
+}
+.demo-topbar .brand {
+  font-size: 18px;
+}
+.demo-topbar .brand-mark {
+  height: 34px;
+  width: 34px;
+  font-size: 14px;
+}
+.demo-topbar .secondary {
+  padding-inline: 12px;
+}
+.demo-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  background: var(--soft);
+}
+.demo-banner > svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.demo-banner p,
+.demo-assumptions > p,
+.demo-invitation p {
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.demo-assumptions,
+.demo-invitation {
+  margin-bottom: 28px;
+}
+.demo-assumptions h2 {
+  margin-top: 10px;
+}
+.demo-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.demo-facts span {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 10px 14px;
+}
+.demo-facts strong {
+  font-size: 19px;
+  color: var(--accent);
+}
+.demo-invitation .secondary {
+  margin-top: 16px;
+}
+.demo-link {
+  margin-top: 20px;
+}
+.example-week {
+  justify-content: center;
+  padding: 16px;
+}
+.example-receipt {
+  margin-block: 20px;
+}
+.demo-return {
+  margin-top: 24px;
+}
+.card .summary-session {
+  display: grid;
+  grid-template-columns: 85px minmax(0, 1fr) auto;
+  gap: 12px;
+}
+.session-timing,
+.session-paid {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.session-timing span {
+  overflow-wrap: anywhere;
+}
+.session-paid {
+  text-align: right;
+}
+.session-timing small,
+.session-paid small {
+  font-size: 13px;
+  color: var(--muted);
+}
+@media (max-width: 600px) {
+  .card .summary-session {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .summary-session > strong {
+    grid-column: 1 / -1;
+  }
+  .session-timing {
+    grid-column: 1;
+  }
+  .demo-shell .demo-topbar {
+    flex-wrap: wrap;
+  }
+}
 .palette-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));

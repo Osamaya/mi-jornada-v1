@@ -7,7 +7,7 @@ import {
   type WeekEstimate,
   type WeeklyPaymentRecord,
 } from '../../shared/models';
-import { dateInput, formatDate, labelWeek } from '../../domain/time';
+import { dateInput, formatDate, labelWeek, localInstant } from '../../domain/time';
 import { hours, money, parseMoney } from '../../domain/money';
 import { audit, uid } from '../../application/commands';
 import { csvWeek, saveFile } from '../../infrastructure/backup/files';
@@ -20,6 +20,7 @@ export function Summary({
   changeWeek,
   update,
   onSettings,
+  readOnly = false,
 }: {
   state: AppState;
   estimate: WeekEstimate;
@@ -27,6 +28,7 @@ export function Summary({
   changeWeek: (ms: number) => void;
   update: (mutate: (s: AppState) => void) => Promise<boolean>;
   onSettings: () => void;
+  readOnly?: boolean;
 }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -79,25 +81,29 @@ export function Summary({
         <h1>Resumen semanal</h1>
         <p>Lo que trabajaste y cuánto podrías recibir.</p>
       </div>
-      <div className="week-switch">
-        <button
-          className="icon-button"
-          onClick={() => changeWeek(estimate.week.startMs - 1)}
-          aria-label="Semana anterior"
-        >
-          <ChevronLeft />
-        </button>
+      <div className={'week-switch' + (readOnly ? ' example-week' : '')}>
+        {!readOnly && (
+          <button
+            className="icon-button"
+            onClick={() => changeWeek(estimate.week.startMs - 1)}
+            aria-label="Semana anterior"
+          >
+            <ChevronLeft />
+          </button>
+        )}
         <div>
           <strong>{labelWeek(estimate.week)}</strong>
           <small>Tu semana de trabajo · Las Vegas</small>
         </div>
-        <button
-          className="icon-button"
-          onClick={() => changeWeek(estimate.week.endMs + 1)}
-          aria-label="Semana siguiente"
-        >
-          <ChevronRight />
-        </button>
+        {!readOnly && (
+          <button
+            className="icon-button"
+            onClick={() => changeWeek(estimate.week.endMs + 1)}
+            aria-label="Semana siguiente"
+          >
+            <ChevronRight />
+          </button>
+        )}
       </div>
       <section className="pay-card pay-overview">
         <div>
@@ -203,88 +209,117 @@ export function Summary({
           </p>
         </section>
         <section className="card payment-card" id="payment-details">
-          <span className="eyebrow">PUEDES COMPLETARLO DESPUÉS</span>
-          <h2>Con tu recibo a la mano</h2>
+          <span className="eyebrow">
+            {readOnly ? 'SUPUESTOS DEL EJEMPLO' : 'PUEDES COMPLETARLO DESPUÉS'}
+          </span>
+          <h2>{readOnly ? 'Un recibo ficticio para comparar' : 'Con tu recibo a la mano'}</h2>
           <p className="muted">
-            Estos datos ayudan a calcular lo que queda después de los descuentos. Si no los tienes,
-            tus horas y tu pago antes de descuentos siguen disponibles.
+            {readOnly
+              ? 'Estos datos se eligieron únicamente para mostrar una cuenta completa. No se copian a tus ajustes personales.'
+              : 'Estos datos ayudan a calcular lo que queda después de los descuentos. Si no los tienes, tus horas y tu pago antes de descuentos siguen disponibles.'}
           </p>
-          <form
-            onSubmit={savePayment}
-            key={payment?.id ?? estimate.week.startMs}
-            aria-busy={saving}
-          >
-            <label htmlFor="pay-date">¿Qué día te pagan?</label>
-            <input
-              id="pay-date"
-              type="date"
-              name="payDate"
-              defaultValue={payment?.payDate ?? ''}
-              disabled={saving}
-            />
-            <label htmlFor="prior-wages">Lo que esta empresa ya te pagó este año (USD)</label>
-            <input
-              id="prior-wages"
-              name="ytd"
-              disabled={saving}
-              inputMode="decimal"
-              placeholder="Puedes dejarlo pendiente"
-              value={priorWages}
-              onChange={(e) => setPriorWages(e.target.value)}
-              aria-describedby="prior-wages-note"
-            />
-            <small id="prior-wages-note">
-              El acumulado del recibo anterior, antes de este pago. No es lo que te depositaron.
-            </small>
-            <HelpHint title="¿Dónde encuentro este dato? ¿Qué es FICA?">
-              <p>
-                Busca el recibo anterior de esta misma empresa y de este mismo año. Revisa “Social
-                Security wages YTD” y “Medicare wages YTD”. Son los salarios acumulados que se usan
-                para esos impuestos. “YTD” quiere decir “en lo que va del año”.
+          {readOnly && (
+            <>
+              <dl className="pay-lines example-receipt">
+                <div>
+                  <dt>Fecha de pago del ejemplo</dt>
+                  <dd>
+                    {payment?.payDate
+                      ? formatDate(localInstant(payment.payDate + 'T12:00'), { year: 'numeric' })
+                      : 'Pendiente'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Acumulado anterior ficticio</dt>
+                  <dd>{money(payment?.ytdBeforeCents ?? null)}</dd>
+                </div>
+              </dl>
+              <p className="muted">
+                Este ejemplo usa 10 % de descuento federal y $15 en otros descuentos. Son supuestos
+                de demostración; tu recibo puede ser diferente.
               </p>
-              <p>
-                FICA es el nombre de la ley que agrupa Seguro Social y Medicare. La app necesita el
-                acumulado para respetar sus límites; no necesita tu número de Seguro Social.
-              </p>
-              <p>
-                <strong>Ejemplo:</strong> si ambos acumulados del recibo anterior dicen $12,500 y
-                esta semana vas a ganar $600, aquí escribes 12500. No sumes todavía los $600.
-              </p>
-              <p>
-                Si los dos acumulados son distintos, solo tienes el recibo actual, no tienes recibos
-                o no encuentras la cifra, deja este campo pendiente. No uses lo depositado, los
-                salarios de otra empresa ni un cero por adivinar.
-              </p>
-            </HelpHint>
-            <button
-              type="button"
-              className="text-button unknown-value"
-              disabled={saving}
-              onClick={() => setPriorWages('')}
+            </>
+          )}
+          {!readOnly && (
+            <form
+              onSubmit={savePayment}
+              key={payment?.id ?? estimate.week.startMs}
+              aria-busy={saving}
             >
-              No sé este dato; lo dejo pendiente
-            </button>
-            <label htmlFor="received-pay">¿Cuánto recibiste? (USD, opcional)</label>
-            <input
-              id="received-pay"
-              name="received"
-              disabled={saving}
-              inputMode="decimal"
-              placeholder="El dinero que recibiste o te depositaron"
-              defaultValue={
-                payment?.receivedNetCents == null ? '' : (payment.receivedNetCents / 100).toFixed(2)
-              }
-            />
-            <small>Sirve para comparar con la estimación. No hace falta subir un recibo.</small>
-            {error && (
-              <p className="alert error" role="alert">
-                {error}
-              </p>
-            )}
-            <button className="primary" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar datos del pago'}
-            </button>
-          </form>
+              <label htmlFor="pay-date">¿Qué día te pagan?</label>
+              <input
+                id="pay-date"
+                type="date"
+                name="payDate"
+                defaultValue={payment?.payDate ?? ''}
+                disabled={saving}
+              />
+              <label htmlFor="prior-wages">Lo que esta empresa ya te pagó este año (USD)</label>
+              <input
+                id="prior-wages"
+                name="ytd"
+                disabled={saving}
+                inputMode="decimal"
+                placeholder="Puedes dejarlo pendiente"
+                value={priorWages}
+                onChange={(e) => setPriorWages(e.target.value)}
+                aria-describedby="prior-wages-note"
+              />
+              <small id="prior-wages-note">
+                El acumulado del recibo anterior, antes de este pago. No es lo que te depositaron.
+              </small>
+              <HelpHint title="¿Dónde encuentro este dato? ¿Qué es FICA?">
+                <p>
+                  Busca el recibo anterior de esta misma empresa y de este mismo año. Revisa “Social
+                  Security wages YTD” y “Medicare wages YTD”. Son los salarios acumulados que se
+                  usan para esos impuestos. “YTD” quiere decir “en lo que va del año”.
+                </p>
+                <p>
+                  FICA es el nombre de la ley que agrupa Seguro Social y Medicare. La app necesita
+                  el acumulado para respetar sus límites; no necesita tu número de Seguro Social.
+                </p>
+                <p>
+                  <strong>Ejemplo:</strong> si ambos acumulados del recibo anterior dicen $12,500 y
+                  esta semana vas a ganar $600, aquí escribes 12500. No sumes todavía los $600.
+                </p>
+                <p>
+                  Si los dos acumulados son distintos, solo tienes el recibo actual, no tienes
+                  recibos o no encuentras la cifra, deja este campo pendiente. No uses lo
+                  depositado, los salarios de otra empresa ni un cero por adivinar.
+                </p>
+              </HelpHint>
+              <button
+                type="button"
+                className="text-button unknown-value"
+                disabled={saving}
+                onClick={() => setPriorWages('')}
+              >
+                No sé este dato; lo dejo pendiente
+              </button>
+              <label htmlFor="received-pay">¿Cuánto recibiste? (USD, opcional)</label>
+              <input
+                id="received-pay"
+                name="received"
+                disabled={saving}
+                inputMode="decimal"
+                placeholder="El dinero que recibiste o te depositaron"
+                defaultValue={
+                  payment?.receivedNetCents == null
+                    ? ''
+                    : (payment.receivedNetCents / 100).toFixed(2)
+                }
+              />
+              <small>Sirve para comparar con la estimación. No hace falta subir un recibo.</small>
+              {error && (
+                <p className="alert error" role="alert">
+                  {error}
+                </p>
+              )}
+              <button className="primary" disabled={saving}>
+                {saving ? 'Guardando…' : 'Guardar datos del pago'}
+              </button>
+            </form>
+          )}
           {payment?.receivedNetCents != null && (
             <div className="comparison">
               <span>Dinero que recibiste</span>
@@ -322,15 +357,33 @@ export function Summary({
           <span className="tag">{sessions.length} registros</span>
         </div>
         {sessions.length ? (
-          sessions.map((s) => (
-            <div className="summary-session" key={s.id}>
-              <strong>{formatDate(s.startMs, { weekday: 'short' })}</strong>
-              <span>
-                {formatDate(s.startMs, { hour: '2-digit', minute: '2-digit' })} →{' '}
-                {s.endMs ? formatDate(s.endMs, { hour: '2-digit', minute: '2-digit' }) : 'En curso'}
-              </span>
-            </div>
-          ))
+          sessions.map((s) => {
+            const segments = estimate.segments.filter((segment) => segment.sessionId === s.id);
+            const paidMs = segments
+              .filter((segment) => segment.paid)
+              .reduce((total, segment) => total + segment.endMs - segment.startMs, 0);
+            const unpaidMs = segments
+              .filter((segment) => !segment.paid)
+              .reduce((total, segment) => total + segment.endMs - segment.startMs, 0);
+            return (
+              <div className="summary-session" key={s.id}>
+                <strong>{formatDate(s.startMs, { weekday: 'short' })}</strong>
+                <div className="session-timing">
+                  <span>
+                    {formatDate(s.startMs, { hour: '2-digit', minute: '2-digit' })} →{' '}
+                    {s.endMs
+                      ? formatDate(s.endMs, { hour: '2-digit', minute: '2-digit' })
+                      : 'En curso'}
+                  </span>
+                  {unpaidMs > 0 && <small>{hours(unpaidMs)} de comida o pausa sin pago</small>}
+                </div>
+                <div className="session-paid">
+                  <strong>{hours(paidMs)}</strong>
+                  <small>pagadas en esta semana</small>
+                </div>
+              </div>
+            );
+          })
         ) : (
           <p className="muted">Todavía no hay jornadas en esta semana.</p>
         )}
@@ -387,21 +440,26 @@ export function Summary({
             </div>
           </details>
         </details>
-        <button
-          className="secondary"
-          onClick={() =>
-            void saveFile(
-              'mi-jornada-' + dateInput(estimate.week.startMs) + '.csv',
-              csvWeek(state, estimate),
-              'text/csv;charset=utf-8',
-            ).catch((e) => setError(String(e)))
-          }
-        >
-          <Download size={18} /> Guardar resumen para Excel
-        </button>
-        <small className="export-note">
-          Se guarda como tabla CSV. Es una estimación de pago; no es tu declaración de impuestos.
-        </small>
+        {!readOnly && (
+          <>
+            <button
+              className="secondary"
+              onClick={() =>
+                void saveFile(
+                  'mi-jornada-' + dateInput(estimate.week.startMs) + '.csv',
+                  csvWeek(state, estimate),
+                  'text/csv;charset=utf-8',
+                ).catch((e) => setError(String(e)))
+              }
+            >
+              <Download size={18} /> Guardar resumen para Excel
+            </button>
+            <small className="export-note">
+              Se guarda como tabla CSV. Es una estimación de pago; no es tu declaración de
+              impuestos.
+            </small>
+          </>
+        )}
       </section>
     </>
   );
