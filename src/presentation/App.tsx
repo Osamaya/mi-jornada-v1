@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { App as NativeApp } from '@capacitor/app';
 import {
   CalendarDays,
@@ -68,6 +68,14 @@ export default function App() {
   navigationState.current = { page, editor };
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'android') return;
+    const theme = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncSystemBars = () => {
+      void SystemBars.setStyle({
+        style: theme.matches ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      });
+    };
+    syncSystemBars();
+    theme.addEventListener('change', syncSystemBars);
     const listener = NativeApp.addListener('backButton', () => {
       const current = navigationState.current;
       if (current.editor) {
@@ -81,6 +89,7 @@ export default function App() {
       }
     });
     return () => {
+      theme.removeEventListener('change', syncSystemBars);
       void listener.then((handle) => handle.remove());
     };
   }, []);
