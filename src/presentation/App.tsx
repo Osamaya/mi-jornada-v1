@@ -272,7 +272,9 @@ export default function App() {
                 </span>
               </div>
               <div className="home-grid">
-                <section className={`clock-card ${active ? 'running' : ''}`}>
+                <section
+                  className={`clock-card ${active ? 'running' : ''} ${pause ? 'paused' : ''}`}
+                >
                   <div className="section-row">
                     <span className="eyebrow">TU JORNADA DE HOY</span>
                     <span className="clock-status">
@@ -307,6 +309,11 @@ export default function App() {
                     )}
                     {active ? 'Finalizar jornada' : 'Iniciar jornada'}
                   </button>
+                  <p className="clock-hint">
+                    {active
+                      ? 'Tu entrada está guardada. Vuelve aquí cuando termines de trabajar.'
+                      : 'Toca el botón al comenzar tu trabajo.'}
+                  </p>
                   {active && (
                     <div className="break-actions">
                       {!pause && (
@@ -320,9 +327,11 @@ export default function App() {
                           value={breakKind}
                           onChange={(e) => setBreakKind(e.target.value as typeof breakKind)}
                         >
-                          <option value="meal-on-duty">Comida pagada con obligaciones</option>
+                          <option value="meal-on-duty">
+                            Comida mientras sigo atendiendo el trabajo
+                          </option>
                           <option value="short-rest">Descanso corto pagado</option>
-                          <option value="unpaid-meal">Comida libre no pagada (mín. 30 min)</option>
+                          <option value="unpaid-meal">Comida libre, sin pago (30 min o más)</option>
                         </select>
                       )}
                       <button
@@ -367,6 +376,17 @@ export default function App() {
                     <div>
                       <span>Después de descuentos</span>
                       <strong>{money(currentTaxes.net)}</strong>
+                      {currentTaxes.net === null && currentEstimate.grossCents !== null && (
+                        <button
+                          className="text-button inline-pay-action"
+                          onClick={() => {
+                            setViewMs(now);
+                            go('summary');
+                          }}
+                        >
+                          Completar con mi recibo <ChevronRight size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <button
