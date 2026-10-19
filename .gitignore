@@ -1,6 +1,7 @@
 # Dependencias y builds futuros
 node_modules/
 dist/
+artifacts/
 coverage/
 .vite/
 *.tsbuildinfo

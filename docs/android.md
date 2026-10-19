@@ -1,6 +1,8 @@
 # Compilar e instalar en Android
 
-El proyecto está en `android/`, con identificador local `app.mijornada.personal`. **Android Studio ya está instalado en este equipo**. Durante la verificación apareció una instalación reciente del SDK en su ubicación habitual, con Platform 37.0, Build Tools 36.0.0 y Platform Tools. **Faltan Platform 36 y Build Tools 35.0.0 para la configuración actual del proyecto.** No hay APK generado. El primer intento de Gradle se detuvo al descargar su distribución por la red restringida.
+El proyecto está en `android/`, con identificador `app.mijornada.personal`, `versionName` 1.0.0 y `versionCode` 1. **La primera APK debug está generada, su firma verificada y se instaló en el emulador Medium Phone con Android 17 / API 37.** El teléfono físico y el piloto con recibo real siguen pendientes.
+
+En este equipo ya están instalados Android Studio, Platform Tools, SDK Platform 36 y Build Tools 35.0.0. Gradle completó los dos últimos paquetes utilizando las licencias previamente aceptadas. `android/local.properties` apunta al SDK local y se excluye de Git. La primera descarga del wrapper que antes fallaba por la red ya se completó.
 
 El proyecto utiliza Capacitor 8, Android API 36, Android Gradle Plugin 8.13.0 y el wrapper Gradle 8.14.3. Node 22 y un JDK 24 ya están instalados. La comprobación del 19/10/2026 encontró Java 25 en el runtime incluido con Android Studio: seleccionar otro JDK para Gradle según el paso 2.
 
@@ -33,13 +35,23 @@ npm run android:apk
 
 Estas variables solo afectan a la sesión actual de PowerShell. Usar la ruta real de **Android SDK Location** si difiere de la del ejemplo. El comando sincroniza los recursos web y ejecuta `assembleDebug`.
 
-Salida esperada **solo después de una compilación exitosa**:
+Salida de la compilación exitosa:
 
 ```text
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Ese archivo todavía no existe. El debug se firma con la clave de desarrollo del equipo y es adecuado para probar, no para establecer la firma definitiva de distribución.
+La copia para instalar se encuentra en `artifacts/MiJornada-1.0.0-debug.apk`; el archivo `.sha256` del mismo directorio permite comprobarla. Son artefactos locales excluidos de Git. La APK contiene las arquitecturas arm64-v8a, armeabi-v7a, x86 y x86_64; declara Android mínimo API 24 y target API 36. La ejecución nativa se comprobó en API 37.
+
+El debug se firma con la clave de desarrollo del equipo. `apksigner verify --verbose` confirmó una firma v2 válida. Es adecuado para probar; no establece la firma definitiva de distribución. El APK contiene código y recursos, sin los datos sintéticos de la instalación del emulador.
+
+Para repetir la revisión nativa, después de sincronizar:
+
+```powershell
+.\android\gradlew.bat -p android :app:lintDebug
+```
+
+El análisis terminó con cero errores y siete advertencias: sugerencias de actualización de dependencias, cuatro recursos sin uso y una carpeta de recursos heredada del proyecto Android. No se suprimieron los avisos.
 
 ## APK de distribución firmado
 
@@ -51,7 +63,9 @@ En Android Studio: Build → Generate Signed Bundle / APK → APK. Crear o selec
 2. Antes de guardar datos reales, activar modo avión, abrir por primera vez y configurar tarifa/condiciones.
 3. Iniciar jornada, cerrar forzosamente la app, abrir de nuevo y comprobar que continúa; repetir tras reiniciar el teléfono.
 4. Registrar/finalizar un descanso, una jornada manual que cruce medianoche y una corrección.
-5. Guardar un respaldo fuera de la app mediante el selector/menú del sistema; revisar su restauración y la copia previa.
+5. En Configuración → Copias de mis registros → Guardar respaldo, elegir una carpeta local como Descargas y confirmar Guardar. Revisar respaldo abre el selector para elegir el JSON; comprobar la vista previa antes de confirmar el reemplazo. Verificar también la exportación de la copia previa y el CSV de Resumen.
 6. Comparar una semana completa con el comprobante de pago bruto y neto.
 
-La app desactiva el backup automático y la transferencia de datos Android; usa respaldos explícitos. El manifiesto solicita la eliminación del permiso INTERNET y no incluye GPS ni permisos generales de archivos. Revisar el manifiesto combinado y probar el selector de archivos en la compilación nativa antes del piloto.
+La app desactiva el backup automático y la transferencia de datos Android; usa respaldos explícitos. Se revisó el manifiesto combinado: no contiene permisos de Internet, ubicación, biometría ni almacenamiento general. El guardado usa un plugin local `LocalFiles` con `ACTION_CREATE_DOCUMENT`, sin depender de otra app para guardar en Descargas. Cancelar el selector conserva los datos. Referencias: [documentos de Android](https://developer.android.com/training/data-storage/shared/documents-files) y [plugins Android de Capacitor](https://capacitorjs.com/docs/plugins/android).
+
+La cobertura ejecutada y sus límites están en [verification.md](verification.md). Las pruebas del emulador utilizaron datos sintéticos.
