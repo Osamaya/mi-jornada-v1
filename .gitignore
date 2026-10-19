@@ -1,0 +1,53 @@
+# Dependencias y builds futuros
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Datos personales y respaldos exportados
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+backups/
+exports/
+
+# Credenciales y firma Android
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+local.properties
+android/.gradle/
+android/**/build/
+*.apk
+*.aab
+
+# Archivos locales
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+.tools/
+playwright-report/
+test-results/
+
+# Instrucciones y borradores locales del agente
+AGENTS.md
+AGENTES.md
+.agents/
+.codex/
+.aws/
+.vscode/
+docs/*
+!docs/android.md
+!docs/implementation.md
+!docs/legal-validation.md
+!docs/verification.md
+*.tmp
+*.bak
