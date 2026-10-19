@@ -32,7 +32,8 @@ android/                      proyecto Capacitor y wrapper Gradle
 
 - Entrada/salida, una jornada abierta persistente, descansos pagados y comida libre no pagada.
 - Registro manual, cruce de medianoche, edición con motivo, prevención transaccional de superposición y eliminación lógica auditada.
-- Inicio, historial, resumen y configuración; botones grandes, etiquetas, diálogo con foco y colores del sistema.
+- Inicio, historial, resumen y configuración; nombre opcional con saludo e iniciales, azul marino y grises, temas claro/oscuro, texto legible y botones grandes.
+- Pago explicado como antes/después de descuentos, ayudas accesibles para FICA y datos del recibo, ajustes por secciones desplegables y opción de dejar datos desconocidos pendientes.
 - Historial de tarifa y condiciones por vigencia; cambios de modalidad desde esta semana o una futura, sin reescribir los fichajes ni condiciones de semanas previas.
 - Tiempo observado, pagado/computable, ordinario y extra separados; segmentos de origen y explicación del cálculo.
 - Bruto y neto estimados con campos pendientes explícitos. Datos fiscales por pago, retención federal calibrable y comparación con neto recibido.
@@ -63,6 +64,6 @@ No hay cifrado adicional configurado. Los datos Android quedan en el almacenamie
 
 ## Estado por fases
 
-Diseño, dominio, persistencia, UI, cálculo y pruebas locales implementados. Capacitor sincronizado y proyecto Android preparado. La compilación APK se intentó; el wrapper no pudo descargar Gradle con la red restringida y no se encontró Android SDK configurado ni instalado en las rutas habituales. Se encontró Java 24. No se generó ni firmó un APK y no se afirma prueba en dispositivo.
+Diseño, dominio, persistencia, UI, cálculo y pruebas locales implementados. Capacitor sincronizado y proyecto Android preparado. La compilación APK se intentó; el wrapper no pudo descargar Gradle con la red restringida. La revisión posterior encontró Android Studio, JDK 24 y una instalación reciente del SDK con API 37.0 y Build Tools 36.0.0. Faltan Platform 36 y Build Tools 35.0.0 para este proyecto; se debe seleccionar un JDK compatible con Gradle 8.14.3 en lugar del runtime Java 25 del Studio detectado. No se generó ni firmó un APK y no se afirma prueba en dispositivo.
 
 La compilación APK requiere un SDK Android instalado. El procedimiento para completarlo se encuentra en [android.md](android.md). El piloto requiere una semana real y comprobante del usuario.

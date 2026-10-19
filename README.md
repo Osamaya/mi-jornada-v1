@@ -2,7 +2,7 @@
 
 Aplicación personal para registrar jornadas y estimar pago bruto y neto semanal en USD. React + TypeScript + Vite, Capacitor Android y SQLite local. Cuatro pantallas en español, sin cuentas, servidor ni APIs de datos.
 
-**Estado: aplicación funcional y proyecto Android preparado.** Build de producción, pruebas de dominio/SQLite y flujos de escritorio/móvil comprobados. **APK pendiente:** no se encontró Android SDK en este entorno; no hay instalación ni piloto nativo verificados.
+**Estado: aplicación funcional y proyecto Android preparado.** Build de producción, pruebas de dominio/SQLite y flujos de escritorio/móvil comprobados. **APK pendiente:** faltan los componentes SDK de las versiones que usa el proyecto; no hay instalación ni piloto nativo verificados.
 
 ## Ejecutar en esta carpeta
 
@@ -28,7 +28,7 @@ Playwright usa Edge si está instalado en la ruta habitual. En otro equipo, inst
 
 En Configuración puedes guardar tu nombre o apodo. Es opcional: personaliza el saludo y el perfil, se conserva en el dispositivo y viaja con tus respaldos. Las copias de la versión anterior se actualizan al restaurarlas sin perder las jornadas.
 
-La interfaz usa “antes de descuentos” y “después de descuentos” para explicar el pago bruto y neto. Las ayudas se abren al tocar “¿Qué significa?” o la pregunta correspondiente; funcionan también con teclado. En los datos del recibo se explica FICA, dónde buscar el acumulado del recibo anterior y cómo dejarlo pendiente sin adivinar un cero. Los descuentos y respaldos están en secciones desplegables para completar cuando se necesiten.
+La interfaz usa “antes de descuentos” y “después de descuentos” para explicar el pago bruto y neto. Las ayudas se abren al tocar “¿Qué significa?” o la pregunta correspondiente; funcionan también con teclado. En los datos del recibo se explica FICA, dónde buscar el acumulado del recibo anterior y cómo dejarlo pendiente sin adivinar un cero. Los descuentos y respaldos están en secciones desplegables para completar cuando se necesiten. La presentación usa azul marino y grises, modo claro/oscuro según el sistema, campos con texto de al menos 16 px y navegación adaptada a móvil.
 
 1. Configurar tarifa y vigencia; confirmar semana laboral y aplicabilidad del perfil de empleado cubierto no exento.
 2. Iniciar/finalizar jornada o agregar registros manuales. La comida pagada con obligaciones no se descuenta.
@@ -86,15 +86,15 @@ No existe sincronización cloud ni cifrado adicional configurado. Android usa al
 
 | Comprobación                                               | Resultado                                   |
 | ---------------------------------------------------------- | ------------------------------------------- |
-| Vitest: dominio y SQLite                                   | 58 pruebas aprobadas                        |
-| Playwright: escritorio y móvil                             | 2 flujos completos aprobados                |
+| Vitest: dominio, perfil y SQLite                           | 62 pruebas aprobadas                        |
+| Playwright: escritorio y móvil, claro y oscuro             | 6 pruebas aprobadas                         |
 | TypeScript y build Vite                                    | Correctos                                   |
 | Arranque del build, móvil oscuro, sin solicitudes externas | Correcto                                    |
 | Auditoría de dependencias                                  | 0 vulnerabilidades reportadas al 19/10/2026 |
 | Sincronización Capacitor                                   | Correcta                                    |
 | APK / dispositivo Android / piloto con recibo real         | Pendientes                                  |
 
-Para generar el APK, completar el entorno Android y seguir la [guía de compilación e instalación](docs/android.md). No se incluye un APK inexistente ni claves de firma.
+Para generar el APK, seguir la [guía de compilación e instalación](docs/android.md). Android Studio y Platform Tools ya están instalados en este equipo; faltan SDK Platform 36 y Build Tools 35.0.0. Se debe seleccionar JDK 21 o el JDK 24 existente para Gradle. No se incluye un APK inexistente ni claves de firma.
 
 ## Repositorio
 
