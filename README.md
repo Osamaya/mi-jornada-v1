@@ -28,6 +28,8 @@ Playwright usa Edge si está instalado en la ruta habitual. En otro equipo, inst
 
 En Configuración puedes guardar tu nombre o apodo. Es opcional: personaliza el saludo y el perfil, se conserva en el dispositivo y viaja con tus respaldos. Las copias de la versión anterior se actualizan al restaurarlas sin perder las jornadas.
 
+La interfaz usa “antes de descuentos” y “después de descuentos” para explicar el pago bruto y neto. Las ayudas se abren al tocar “¿Qué significa?” o la pregunta correspondiente; funcionan también con teclado. En los datos del recibo se explica FICA, dónde buscar el acumulado del recibo anterior y cómo dejarlo pendiente sin adivinar un cero. Los descuentos y respaldos están en secciones desplegables para completar cuando se necesiten.
+
 1. Configurar tarifa y vigencia; confirmar semana laboral y aplicabilidad del perfil de empleado cubierto no exento.
 2. Iniciar/finalizar jornada o agregar registros manuales. La comida pagada con obligaciones no se descuenta.
 3. Consultar Resumen. Para el neto, confirmar las deducciones e ingresar fecha de pago y salarios acumulados previos de ese empleador según recibo. No se supone cero.

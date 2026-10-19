@@ -96,10 +96,11 @@ export function calculateWeek(state: AppState, week: Interval, asOfMs: number): 
     warnings.push(message);
     blocked = true;
   }
-  if (!settings.weekConfirmed) block('Confirma el inicio de tu semana laboral en Configuración.');
+  if (!settings.weekConfirmed)
+    block('Confirma en Configuración cuándo empieza tu semana de trabajo.');
   if (!settings.coverageConfirmed)
     block(
-      'Confirma que corresponde el perfil de empleado cubierto, no exento y sin condiciones especiales.',
+      'Falta confirmar en Configuración las reglas de horas extra que corresponden a tu trabajo.',
     );
   if (missingRate) block('Falta una tarifa vigente para parte de esta semana.');
   if (week.startMs < localInstant('2026-07-01T00:00'))

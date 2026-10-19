@@ -1,3 +1,157 @@
+.help-hint {
+  margin: 14px 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+.help-hint > summary {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 46px;
+  padding: 11px 13px;
+  color: var(--green);
+  font-size: 14px;
+}
+.help-hint > summary::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 18px;
+}
+.help-hint[open] > summary::after {
+  content: '−';
+}
+.help-hint summary::-webkit-details-marker {
+  display: none;
+}
+.help-hint summary svg {
+  flex-shrink: 0;
+}
+.help-content {
+  padding: 0 15px 15px;
+  font-size: 14px;
+  color: var(--text);
+}
+.help-content p {
+  margin-top: 10px;
+}
+.settings-form > .settings-section {
+  margin: 0;
+}
+.settings-section > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  font-size: 18px;
+}
+.settings-section > summary::after {
+  content: '+';
+  font-size: 22px;
+  margin-left: 5px;
+}
+.settings-section[open] > summary::after {
+  content: '−';
+}
+.settings-section > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-section > summary > span:first-child {
+  margin-right: auto;
+}
+.settings-section-body {
+  padding-top: 16px;
+}
+.setup-guide {
+  padding: 20px 23px;
+  margin-bottom: 24px;
+  border-left: 3px solid var(--green);
+  background: var(--soft);
+  border-radius: 0 12px 12px 0;
+}
+.setup-guide p {
+  margin-top: 7px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.settings-save small {
+  margin-top: 10px;
+}
+.pay-overview {
+  gap: 28px;
+}
+.pay-after {
+  border-left: 1px solid #ffffff30;
+  padding-left: 30px;
+}
+.pay-after > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  font-size: 13px;
+  text-underline-offset: 4px;
+}
+.payment-card {
+  scroll-margin-top: 24px;
+}
+.payment-card h2 {
+  margin: 10px 0;
+}
+.payment-card form {
+  margin-top: 24px;
+}
+.payment-card form > label {
+  margin-top: 22px;
+}
+.payment-card form > small {
+  margin-top: 9px;
+}
+.payment-card form > .primary {
+  width: 100%;
+  margin-top: 24px;
+}
+.unknown-value {
+  text-align: left;
+  justify-content: flex-start;
+}
+.week-progress-note,
+.export-note {
+  margin-top: 17px;
+}
+.tag {
+  display: inline-block;
+  background: var(--soft);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .pay-overview {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pay-after {
+    border-left: 0;
+    border-top: 1px solid #ffffff30;
+    padding: 22px 0 0;
+  }
+  .settings-section > summary {
+    flex-wrap: wrap;
+    font-size: 17px;
+  }
+  .day-picker {
+    gap: 6px;
+  }
+  .day-picker span {
+    width: 42px;
+    font-size: 12px;
+  }
+}
 .profile-card {
   margin-bottom: 24px;
 }

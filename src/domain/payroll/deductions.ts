@@ -21,20 +21,18 @@ export function deductions(
     gross !== null && settings.federalConfirmed ? percentOf(gross, settings.federalBps) : null;
   if (!settings.federalConfirmed)
     warnings.push(
-      'La retención federal inicial de 10 % es un supuesto. Configúrala o calíbrala con tu recibo.',
+      'Revisa el porcentaje de impuesto federal en Configuración. El 10 % inicial es solo un ejemplo.',
     );
   const year = payment?.payDate?.slice(0, 4);
   if (!payment?.payDate)
-    warnings.push('Indica la fecha prevista de pago para elegir el año fiscal.');
+    warnings.push('Escribe qué día te pagan para usar las reglas del año correcto.');
   else if (year !== '2026')
     warnings.push('Solo están verificadas las tasas y el límite fiscal de 2026.');
   if (!settings.ficaConfirmed)
-    warnings.push(
-      'Confirma la aplicación de Social Security y Medicare en tu nómina. No se determina por estatus migratorio.',
-    );
+    warnings.push('Falta confirmar los descuentos de Seguro Social y Medicare en Configuración.');
   if (payment?.ytdBeforeCents === null || payment?.ytdBeforeCents === undefined)
     warnings.push(
-      'Falta el salario acumulado de este empleador antes de este pago, según recibo. No se supone cero.',
+      'Falta el acumulado del recibo anterior de esta empresa. Puedes dejarlo pendiente si no lo conoces.',
     );
   if (gross !== null && settings.ficaConfirmed && year === '2026') {
     medicare = percentOf(gross, TAX_2026.medicareBps);

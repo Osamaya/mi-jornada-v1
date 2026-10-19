@@ -361,11 +361,11 @@ export default function App() {
                   </div>
                   <div className="mini-pay">
                     <div>
-                      <span>Bruto estimado</span>
+                      <span>Antes de descuentos</span>
                       <strong>{money(currentEstimate.grossCents)}</strong>
                     </div>
                     <div>
-                      <span>Neto estimado</span>
+                      <span>Después de descuentos</span>
                       <strong>{money(currentTaxes.net)}</strong>
                     </div>
                   </div>
@@ -558,6 +558,7 @@ export default function App() {
               state={state}
               estimate={estimate}
               taxes={taxes}
+              onSettings={() => go('settings')}
               changeWeek={setViewMs}
               update={update}
             />
