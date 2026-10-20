@@ -29,6 +29,12 @@ bruto = base de todos los intervalos pagados + prima total
 
 La igualdad con `r × mayor(D, W) / 2` se deduce solo para ese escenario uniforme. El motor no la generaliza a tarifas mixtas: en ese caso bloquea el recargo, en lugar de comparar cantidades de horas como si fueran dinero. Los intervalos se conservan aun cuando no gane su candidato. El bruto se suma exactamente con BigInt y se redondea una vez.
 
+## Pago extra indicado y referencia de las reglas generales
+
+Desde 1.1.0 se puede registrar la tarifa completa que el usuario indica recibir por cada hora extra. Esa entrada describe el pago esperado y no sustituye ni valida las reglas laborales. La referencia general de empleados cubiertos no exentos sigue siendo al menos 1.5 veces la tarifa regular después de 40 horas semanales, según [DOL — Overtime](https://www.dol.gov/general/topic/workhours/overtime). La identificación diaria/semanal de horas del perfil Nevada conserva las validaciones anteriores.
+
+Ejemplo: tarifa normal USD 16, tarifa extra indicada USD 18, 40 horas normales y 5 extra. El pago indicado es USD 730; la referencia general, USD 760. Se muestra la diferencia de USD 30 para revisar, y el neto aproximado usa el bruto indicado, sin simular que la diferencia se haya pagado. Las tasas ingresadas tienen vigencia y auditoría. Se bloquea el total con tarifas mixtas en una semana con overtime; no se reasignan horas por conjetura.
+
 ## Deducciones: retención aproximada, no declaración
 
 | Dato                                                                                              | Fuente oficial                                                                                                          | Aplicación                                                                                                                                                                             |

@@ -2,7 +2,7 @@
 
 Aplicación personal para registrar jornadas y estimar pago bruto y neto semanal en USD. React + TypeScript + Vite, Capacitor Android y SQLite local. Cuatro pantallas en español, sin cuentas, servidor ni APIs de datos.
 
-**Estado: primera APK de pruebas 1.0.0 generada e instalada en emulador Android 17 / API 37.** Registro, personalización, cierre forzado, respaldos locales y restauración comprobados en modo avión. Build web y pruebas de dominio/SQLite e interfaz aprobados. La prueba en el teléfono de uso diario y el piloto con un recibo real siguen pendientes.
+**Estado: APK de pruebas 1.1.0 generada e instalada en emulador Android 17 / API 37.** Incluye pago configurable de horas extra y actualización de datos v2 a v3 comprobada sin perder registros. Registro, personalización, cierre forzado, respaldos locales y restauración se verificaron desde la primera APK. Build web y pruebas de dominio/SQLite e interfaz aprobados. La prueba en el teléfono de uso diario y el piloto con un recibo real siguen pendientes.
 
 ## Ejecutar en esta carpeta
 
@@ -42,6 +42,12 @@ En Android, Atrás cierra el editor o vuelve al inicio; desde el inicio deja la 
 2. Iniciar/finalizar jornada o agregar registros manuales. La comida pagada con obligaciones no se descuenta.
 3. Consultar Resumen. Para el neto, confirmar las deducciones e ingresar fecha de pago y salarios acumulados previos de ese empleador según recibo. No se supone cero.
 4. Guardar respaldos JSON fuera de la app. El CSV sirve para revisión, no para restauración.
+
+### Indicar cuánto te pagan por las horas extra
+
+En **Configuración → 1. Tu pago por hora**, elegir **Escribir cuánto me pagan por cada hora extra** y escribir el importe completo por hora, por ejemplo **16 normal y 18 extra**. Indicar desde qué fecha se aplica y guardar los ajustes. También se puede conservar o recuperar **Calcular automáticamente: una vez y media**. La tarifa extra se conserva con el historial, la auditoría y el respaldo.
+
+Las horas extra se identifican con las reglas confirmadas para el trabajo. Con 40 horas normales a USD 16 y 5 extra a USD 18, la estimación del pago indicado es **USD 730 antes de descuentos**. El resumen también muestra la referencia de **USD 760** con la regla general de 1.5 veces y los **USD 30 por revisar**. Registrar otra tarifa no confirma que cumpla las reglas aplicables. Bruto, neto aproximado y CSV identifican el pago indicado; la referencia se conserva por separado. Si cambian las tarifas dentro de una semana con overtime, el total requiere revisión.
 
 El porcentaje federal inicial de 10 % es un supuesto sin confirmar, editable y calibrable; no es una tasa universal del IRS. No se solicitan campos de estatus migratorio, SSN, ITIN ni identificación. El neto aproxima retenciones y no reemplaza una declaración fiscal.
 
@@ -84,7 +90,7 @@ docs/                Uso técnico, reglas y verificación
 
 ## Respaldo y protección de datos
 
-Las escrituras y su auditoría son transaccionales. Se rechazan jornadas/descansos superpuestos y ediciones basadas en una revisión obsoleta. Una jornada abierta conserva su instante inicial después de recargar.
+Las escrituras y su auditoría son transaccionales. Se rechazan jornadas/descansos superpuestos y ediciones basadas en una revisión obsoleta. Una jornada abierta conserva su instante inicial después de recargar. El esquema y respaldo actuales son v3; se aceptan respaldos v1 y v2 mediante conversión validada. Actualizar desde v2 conserva una copia previa y añade la opción automática de horas extra a las tarifas anteriores, sin cambiar sus importes ni jornadas.
 
 Para restaurar: seleccionar JSON, revisar conteos y confirmar el reemplazo completo. Se valida antes de escribir y se conserva una copia previa en SQLite; puede exportarse desde Configuración. La restauración no mezcla archivos automáticamente. Límite: 10 MB y 50 000 elementos por colección.
 
@@ -94,18 +100,18 @@ No existe sincronización cloud ni cifrado adicional configurado. Android usa al
 
 | Comprobación                                               | Resultado                                   |
 | ---------------------------------------------------------- | ------------------------------------------- |
-| Vitest: dominio, perfil, ejemplo y SQLite                  | 64 pruebas aprobadas                        |
-| Playwright: escritorio y móvil, claro y oscuro             | 18 pruebas aprobadas                        |
+| Vitest: dominio, perfil, ejemplo y SQLite                  | 80 pruebas aprobadas                        |
+| Playwright: escritorio y móvil, claro y oscuro             | 20 pruebas aprobadas                        |
 | TypeScript y build Vite                                    | Correctos                                   |
 | Arranque del build, móvil oscuro, sin solicitudes externas | Correcto                                    |
 | Auditoría de dependencias                                  | 0 vulnerabilidades reportadas al 19/10/2026 |
 | Sincronización Capacitor                                   | Correcta                                    |
-| APK debug 1.0.0 y firma                                    | Generada y verificada                       |
+| APK debug 1.1.0 y firma                                    | Generada y verificada                       |
 | Android Lint                                               | 0 errores, 7 advertencias                   |
 | Emulador Android 17, modo avión y SQLite nativo            | Verificado                                  |
 | Teléfono físico / piloto con recibo real                   | Pendientes                                  |
 
-La APK actual con selección de colores y semana de ejemplo está en `artifacts/MiJornada-1.0.0-ux-debug.apk`, con SHA-256 en el mismo directorio. Se instaló y comprobó en el emulador, incluida la vuelta del ejemplo tras recargar sin alterar las tablas personales. La primera compilación se conserva en `artifacts/MiJornada-1.0.0-debug.apk`. Ambas son builds de desarrollo 1.0.0, excluidas de Git. Para reproducir la actual, seguir la [guía de compilación e instalación](docs/android.md). El SDK necesario ya está instalado y se compiló con JDK 24. Se usa la clave debug del equipo; la firma definitiva de distribución sigue pendiente.
+La APK actual está en `artifacts/MiJornada-1.1.0-debug.apk`, con SHA-256 en el mismo directorio. Incluye tarifa extra configurable, selección de colores y semana de ejemplo. Se instaló sobre 1.0.0 y se compararon los registros durante la migración. Las compilaciones anteriores se conservan como artefactos locales; todas se excluyen de Git. Para reproducir la actual o enviarla al teléfono, seguir la [guía de compilación, instalación y envío](docs/android.md). El SDK necesario ya está instalado y se compiló con JDK 24. Se usa la clave debug del equipo; la firma definitiva de distribución sigue pendiente.
 
 ## Repositorio
 
