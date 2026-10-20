@@ -25,7 +25,7 @@ export class Repository {
   private async migrate() {
     await this.driver.execute(migration1);
     const versions = await this.driver.query('SELECT version FROM schema_migrations');
-    if (versions.some((v) => v.version !== 1 && v.version !== 2))
+    if (versions.some((v) => ![1, 2, 3].includes(Number(v.version))))
       throw new Error('La base requiere una versión más reciente de Mi Jornada.');
     if (!versions.length)
       await this.driver.run('INSERT INTO schema_migrations VALUES(1,?)', [Date.now()]);
@@ -33,14 +33,31 @@ export class Repository {
       await this.driver.execute(migration2);
       await this.driver.run('INSERT INTO schema_migrations VALUES(2,?)', [Date.now()]);
     }
+    if (!versions.some((v) => v.version === 3)) {
+      const previous = await this.read(2);
+      if (previous) {
+        // Copia previa y conversión de tarifas dentro de la misma transacción de carga.
+        await this.driver.run('INSERT INTO recovery_snapshots VALUES(?,?,?)', [
+          uid(),
+          Date.now(),
+          JSON.stringify(previous),
+        ]);
+        for (const rate of previous.rates)
+          await this.driver.run('UPDATE pay_rate_history SET payload=? WHERE id=?', [
+            JSON.stringify(rate),
+            rate.id,
+          ]);
+      }
+      await this.driver.run('INSERT INTO schema_migrations VALUES(3,?)', [Date.now()]);
+    }
   }
-  private async read(): Promise<AppState | null> {
+  private async read(schemaVersion: 2 | 3 = 3): Promise<AppState | null> {
     const revision = (
       await this.driver.query('SELECT revision FROM app_state WHERE singleton=1')
     )[0]?.revision;
     if (revision === undefined) return null;
     const state: AppState = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       revision: Number(revision),
       profile: {
         displayName: String(
@@ -62,8 +79,7 @@ export class Repository {
         JSON.parse(String(row.payload)),
       );
     }
-    validateState(state);
-    return state;
+    return upgradeState({ ...state, schemaVersion });
   }
   private async write(state: AppState) {
     await this.driver.run('INSERT OR REPLACE INTO user_profile VALUES(1,?)', [

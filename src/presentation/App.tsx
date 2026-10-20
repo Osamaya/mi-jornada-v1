@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { App as NativeApp } from '@capacitor/app';
 import {
   CalendarDays,
@@ -39,6 +39,8 @@ import { SessionEditor } from './components/SessionEditor';
 import { Settings } from './pages/Settings';
 import { Summary } from './pages/Summary';
 import { initials } from './components/ProfileCard';
+import { useAppearance } from './appearance';
+import { DemoWeek } from './pages/DemoWeek';
 
 let repositoryPromise: Promise<Repository> | undefined;
 function openRepository() {
@@ -53,6 +55,32 @@ const navigation = [
 ] as const;
 
 export default function App() {
+  const isExample = () => new URLSearchParams(location.search).get('demo') === 'week';
+  const [example, setExample] = useState(isExample);
+  useEffect(() => {
+    const onPopState = () => setExample(isExample());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  function changeExample(show: boolean) {
+    const url = new URL(location.href);
+    if (show) url.searchParams.set('demo', 'week');
+    else url.searchParams.delete('demo');
+    url.hash = '';
+    if (show) history.pushState(null, '', url);
+    else history.replaceState(null, '', url);
+    setExample(show);
+    window.scrollTo({ top: 0 });
+  }
+  return example ? (
+    <DemoWeek onClose={() => changeExample(false)} />
+  ) : (
+    <PersonalApp onExample={() => changeExample(true)} />
+  );
+}
+
+function PersonalApp({ onExample }: { onExample: () => void }) {
+  const appearance = useAppearance();
   const [state, setState] = useState<AppState | null>(null),
     [page, setPage] = useState<Page>('home'),
     [error, setError] = useState(''),
@@ -68,14 +96,6 @@ export default function App() {
   navigationState.current = { page, editor };
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'android') return;
-    const theme = window.matchMedia('(prefers-color-scheme: dark)');
-    const syncSystemBars = () => {
-      void SystemBars.setStyle({
-        style: theme.matches ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
-      });
-    };
-    syncSystemBars();
-    theme.addEventListener('change', syncSystemBars);
     const listener = NativeApp.addListener('backButton', () => {
       const current = navigationState.current;
       if (current.editor) {
@@ -89,7 +109,6 @@ export default function App() {
       }
     });
     return () => {
-      theme.removeEventListener('change', syncSystemBars);
       void listener.then((handle) => handle.remove());
     };
   }, []);
@@ -403,6 +422,9 @@ export default function App() {
                     <div>
                       <span>Antes de descuentos</span>
                       <strong>{money(currentEstimate.grossCents)}</strong>
+                      {currentEstimate.overtimeHourlyCents !== null && (
+                        <small>Con la tarifa extra que indicaste</small>
+                      )}
                     </div>
                     <div>
                       <span>Después de descuentos</span>
@@ -499,6 +521,9 @@ export default function App() {
                 <LockKeyhole size={14} /> Tus registros permanecen en este dispositivo. El pago
                 mostrado es una estimación.
               </p>
+              <button className="text-button demo-link" onClick={onExample}>
+                Ver una semana de ejemplo <ChevronRight size={17} />
+              </button>
             </>
           )}
           {page === 'history' && (
@@ -616,6 +641,8 @@ export default function App() {
           )}
           {page === 'settings' && (
             <Settings
+              onExample={onExample}
+              appearance={appearance}
               key={`${atDate(state.employment, now)!.id}-${atDate(state.payroll, now)!.id}-${state.rates.map((r) => r.id).join('-')}`}
               state={state}
               update={update}

@@ -8,7 +8,8 @@ import { HOUR } from '../src/shared/models';
 
 let db: Database,
   repository: Repository,
-  failInsert = false;
+  failInsert = false,
+  failMigration = false;
 beforeEach(async () => {
   const SQL = await initSqlJs();
   db = new SQL.Database();
@@ -17,6 +18,8 @@ beforeEach(async () => {
       db.exec(sql);
     },
     async run(sql, values: SqlValue[] = []) {
+      if (failMigration && sql.startsWith('UPDATE pay_rate_history'))
+        throw new Error('Migración interrumpida');
       if (failInsert && sql.startsWith('INSERT INTO work_sessions'))
         throw new Error('Disco sin espacio');
       db.run(sql, values);
@@ -45,16 +48,52 @@ beforeEach(async () => {
     },
   };
   failInsert = false;
+  failMigration = false;
   repository = new Repository(driver);
 });
 const now = localInstant('2026-10-19T08:00');
 describe('SQLite y transacciones del repositorio real', () => {
+  async function legacyV2() {
+    let state = await repository.load();
+    state = await repository.update(state.revision, (s) => {
+      s.profile.displayName = 'José';
+      s.rates = [{ id: 'rate', effectiveFromMs: 0, hourlyCents: 1600, overtimeHourlyCents: null }];
+      startSession(s, now);
+    });
+    db.run('UPDATE pay_rate_history SET payload=?', [
+      JSON.stringify({ id: 'rate', effectiveFromMs: 0, hourlyCents: 1600 }),
+    ]);
+    db.exec('DELETE FROM schema_migrations WHERE version=3');
+    return state;
+  }
+  test('v2 a v3 conserva nombre, jornada, tarifa, auditoría y copia previa', async () => {
+    const before = await legacyV2();
+    const migrated = await repository.load();
+    expect(migrated).toEqual(before);
+    expect(await repository.lastRecovery()).toEqual(before);
+    const changed = await repository.update(migrated.revision, (s) => {
+      s.rates[0].overtimeHourlyCents = 1800;
+    });
+    expect((await repository.load()).rates).toEqual(changed.rates);
+  });
+  test('una falla de migración revierte tarifas, versión y copia previa', async () => {
+    await legacyV2();
+    failMigration = true;
+    await expect(repository.load()).rejects.toThrow('Migración interrumpida');
+    expect(db.exec('SELECT version FROM schema_migrations WHERE version=3')).toEqual([]);
+    expect(db.exec('SELECT count(*) FROM recovery_snapshots')[0].values[0][0]).toBe(0);
+    expect(String(db.exec('SELECT payload FROM pay_rate_history')[0].values[0][0])).not.toContain(
+      'overtimeHourlyCents',
+    );
+    failMigration = false;
+    expect((await repository.load()).rates[0].overtimeHourlyCents).toBeNull();
+  });
   test('migra una instalación v1 con jornada abierta y añade nombre sin perder datos', async () => {
     let state = await repository.load();
     state = await repository.update(state.revision, (s) => startSession(s, now));
-    db.exec('DROP TABLE user_profile; DELETE FROM schema_migrations WHERE version=2;');
+    db.exec('DROP TABLE user_profile; DELETE FROM schema_migrations WHERE version IN (2,3);');
     const migrated = await repository.load();
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(3);
     expect(migrated.profile.displayName).toBe('');
     expect(migrated.sessions).toEqual(state.sessions);
     const named = await repository.update(migrated.revision, (s) => {
@@ -68,7 +107,7 @@ describe('SQLite y transacciones del repositorio real', () => {
     const loaded = await repository.load();
     expect(loaded.sessions).toEqual(next.sessions);
     expect(loaded.sessions[0].endMs).toBeNull();
-    expect(db.exec('SELECT count(*) FROM schema_migrations')[0].values[0][0]).toBe(2);
+    expect(db.exec('SELECT count(*) FROM schema_migrations')[0].values[0][0]).toBe(3);
   });
   test('corrección y auditoría tienen un solo commit', async () => {
     let state = await repository.load();

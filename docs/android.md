@@ -1,6 +1,6 @@
 # Compilar e instalar en Android
 
-El proyecto está en `android/`, con identificador `app.mijornada.personal`, `versionName` 1.0.0 y `versionCode` 1. **La primera APK debug está generada, su firma verificada y se instaló en el emulador Medium Phone con Android 17 / API 37.** El teléfono físico y el piloto con recibo real siguen pendientes.
+El proyecto está en `android/`, con identificador `app.mijornada.personal`, `versionName` 1.1.0 y `versionCode` 2. **La APK debug actual está generada, su firma verificada y se instaló como actualización de 1.0.0 en el emulador Medium Phone con Android 17 / API 37.** El teléfono físico y el piloto con recibo real siguen pendientes.
 
 En este equipo ya están instalados Android Studio, Platform Tools, SDK Platform 36 y Build Tools 35.0.0. Gradle completó los dos últimos paquetes utilizando las licencias previamente aceptadas. `android/local.properties` apunta al SDK local y se excluye de Git. La primera descarga del wrapper que antes fallaba por la red ya se completó.
 
@@ -41,7 +41,15 @@ Salida de la compilación exitosa:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-La copia para instalar se encuentra en `artifacts/MiJornada-1.0.0-debug.apk`; el archivo `.sha256` del mismo directorio permite comprobarla. Son artefactos locales excluidos de Git. La APK contiene las arquitecturas arm64-v8a, armeabi-v7a, x86 y x86_64; declara Android mínimo API 24 y target API 36. La ejecución nativa se comprobó en API 37.
+La copia actual para instalar se encuentra en `artifacts/MiJornada-1.1.0-debug.apk`; incluye pago configurable de horas extra, selección de colores, semana de ejemplo y reapertura SQLite después de recargar la WebView. Las primeras compilaciones 1.0.0 se conservan en `artifacts/`. El archivo `.sha256` de cada APK permite comprobarla. Son artefactos locales excluidos de Git. La APK contiene las arquitecturas arm64-v8a, armeabi-v7a, x86 y x86_64; declara Android mínimo API 24 y target API 36. La ejecución nativa se comprobó en API 37.
+
+Huella SHA-256 de la compilación actual:
+
+```text
+970c08fa85cadd25a096c8320518cd8b53a5fd216397a00fc8745685da4b5eb4
+```
+
+Para verla desde Android Studio, seleccionar el emulador y pulsar **Run ▶** después de `npm run android:sync`. Ya se instaló la compilación actual en el emulador conectado. En **Configuración → 1. Tu pago por hora** se puede indicar el pago completo por hora extra o conservar el cálculo automático. El ejemplo de solo lectura continúa disponible desde Inicio y Configuración.
 
 El debug se firma con la clave de desarrollo del equipo. `apksigner verify --verbose` confirmó una firma v2 válida. Es adecuado para probar; no establece la firma definitiva de distribución. El APK contiene código y recursos, sin los datos sintéticos de la instalación del emulador.
 
@@ -56,6 +64,15 @@ El análisis terminó con cero errores y siete advertencias: sugerencias de actu
 ## APK de distribución firmado
 
 En Android Studio: Build → Generate Signed Bundle / APK → APK. Crear o seleccionar una clave privada, conservar una copia segura fuera del repositorio y generar la variante release. No compartir claves ni contraseñas en GitHub. Mantener la misma clave y el identificador para actualizar la instalación sin desinstalarla. No se ha generado una clave de distribución automáticamente.
+
+## Compartir esta APK para pruebas personales
+
+1. En el Explorador de Windows, abrir `C:\xampp\htdocs\MiJornada\artifacts` y seleccionar **MiJornada-1.1.0-debug.apk**.
+2. Enviar ese archivo como documento, o copiarlo al teléfono por USB. También puede enviarse adjunto por correo o mediante un enlace privado a un archivo que tú subas. La APK contiene la aplicación; los registros de tu instalación se pasan por separado con un respaldo JSON si se necesitan.
+3. En el teléfono Android, descargar y abrir el archivo. Si el sistema solicita **Permitir desde esta fuente**, autorizar la aplicación desde la que se abre el APK y completar la instalación. Las etiquetas exactas dependen del teléfono. [Android: distribución directa e instalación desde otras fuentes](https://developer.android.com/distribute/marketing-tools/alternative-distribution).
+4. Abrir Mi Jornada y configurar el nombre, pago normal, pago extra y condiciones. Para actualizar una instalación anterior firmada con la misma clave, abrir la nueva APK y elegir actualizar; se comprobó con `adb install -r`. Conviene exportar primero un respaldo de los registros reales.
+
+Para estas pruebas no se necesita Android Studio en el teléfono ni publicar en Play Store. La APK compartida aquí usa firma debug; antes de una distribución definitiva se debe preparar la firma release descrita arriba. El código se publica en GitHub, pero la APK no se adjunta automáticamente al hacer push: sigue siendo un archivo local.
 
 ## Instalar y verificar
 

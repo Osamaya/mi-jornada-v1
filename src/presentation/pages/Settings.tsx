@@ -19,23 +19,33 @@ import { money, parseMoney, parsePercent } from '../../domain/money';
 import { backupJson, parseBackup, saveFile } from '../../infrastructure/backup/files';
 import { ProfileCard } from '../components/ProfileCard';
 import { HelpHint } from '../components/HelpHint';
+import { AppearanceCard } from '../components/AppearanceCard';
+import type { useAppearance } from '../appearance';
 
 export function Settings({
   state,
   update,
   restore,
   exportRecovery,
+  appearance,
+  onExample,
 }: {
   state: AppState;
   update: (mutate: (s: AppState) => void) => Promise<boolean>;
   restore: (s: AppState) => Promise<boolean>;
   exportRecovery: () => Promise<void>;
+  appearance: ReturnType<typeof useAppearance>;
+  onExample: () => void;
 }) {
   const now = Date.now(),
     current = atDate(state.employment, now)!,
     payroll = atDate(state.payroll, now)!;
   const [mode, setMode] = useState(current.mode),
     [days, setDays] = useState(current.scheduledDays);
+  const currentRate = atDate(state.rates, now);
+  const [extraMode, setExtraMode] = useState(
+    currentRate?.overtimeHourlyCents == null ? 'automatic' : 'custom',
+  );
   const [error, setError] = useState(''),
     [pending, setPending] = useState<AppState | null>(null),
     [busy, setBusy] = useState(false);
@@ -73,11 +83,24 @@ export function Settings({
         federalConfirmed: f.has('federalConfirmed'),
         otherWeeklyCents: parseMoney(get('other')),
       };
-      const rateText = get('rate'),
+      const rateText = get('rate').trim(),
         rateStart = localInstant(get('rateDate') + 'T00:00');
-      const rate = rateText
-        ? { id: uid(), effectiveFromMs: rateStart, hourlyCents: parseMoney(rateText) }
-        : null;
+      const previousRate = atDate(state.rates, rateStart);
+      const overtimeHourlyCents = extraMode === 'custom' ? parseMoney(get('extraRate')) : null;
+      if (overtimeHourlyCents === 0)
+        throw new Error('El pago de una hora extra debe ser mayor a cero.');
+      const changedExtra = overtimeHourlyCents !== (previousRate?.overtimeHourlyCents ?? null);
+      if (!rateText && !previousRate && extraMode === 'custom')
+        throw new Error('Escribe también cuánto te pagan por una hora normal.');
+      const rate =
+        rateText || (previousRate && changedExtra)
+          ? {
+              id: uid(),
+              effectiveFromMs: rateStart,
+              hourlyCents: rateText ? parseMoney(rateText) : previousRate!.hourlyCents,
+              overtimeHourlyCents,
+            }
+          : null;
       if (rate && rate.hourlyCents === 0) throw new Error('La tarifa debe ser mayor a cero.');
       await update((s) => {
         const before = {
@@ -114,6 +137,7 @@ export function Settings({
         <p>Tu nombre, tu pago y tus horarios. Un paso a la vez.</p>
       </div>
       <ProfileCard state={state} update={update} />
+      <AppearanceCard {...appearance} />
       <div className="setup-guide">
         <strong>Primero, lo básico</strong>
         <p>
@@ -150,6 +174,49 @@ export function Settings({
               <input name="rateDate" type="date" required defaultValue={dateInput(monday)} />
             </label>
           </div>
+          <label>
+            ¿Cómo te pagan las horas extra?
+            <select
+              aria-label="¿Cómo te pagan las horas extra?"
+              value={extraMode}
+              onChange={(event) => setExtraMode(event.target.value)}
+            >
+              <option value="automatic">Calcular automáticamente: una vez y media</option>
+              <option value="custom">Escribir cuánto me pagan por cada hora extra</option>
+            </select>
+          </label>
+          {extraMode === 'custom' && (
+            <label>
+              ¿Cuánto te pagan por cada hora extra? (USD)
+              <input
+                name="extraRate"
+                aria-label="¿Cuánto te pagan por cada hora extra? (USD)"
+                inputMode="decimal"
+                required
+                placeholder="Por ejemplo: 18.00"
+                defaultValue={
+                  currentRate?.overtimeHourlyCents == null
+                    ? ''
+                    : (currentRate.overtimeHourlyCents / 100).toFixed(2)
+                }
+              />
+              <small>
+                Es el pago completo de una hora extra. Si te pagan $18, escribe 18; no la diferencia
+                con tu hora normal. Se aplica desde la fecha indicada arriba.
+              </small>
+            </label>
+          )}
+          <HelpHint title="¿Qué pasa si mi hora extra se paga a otra cantidad?">
+            <p>
+              Puedes registrar la cantidad que te indican para estimar ese pago. Por ejemplo, $16
+              por hora normal y $18 por hora extra.
+            </p>
+            <p>
+              La referencia general es una vez y media: con $16 serían $24 por hora extra. La app
+              conserva esa referencia y muestra la diferencia cuando indicas otra cantidad.
+              Registrar $18 no confirma que ese pago cumpla las reglas aplicables.
+            </p>
+          </HelpHint>
           {!!state.rates.length && (
             <details>
               <summary>Ver mis tarifas anteriores</summary>
@@ -159,6 +226,12 @@ export function Settings({
                   .map((r) => (
                     <li key={r.id}>
                       <strong>{money(r.hourlyCents)}/h</strong>
+                      <small>
+                        Extra:{' '}
+                        {r.overtimeHourlyCents === null
+                          ? 'automática (1.5 veces)'
+                          : money(r.overtimeHourlyCents) + '/h indicada'}
+                      </small>
                       <span>Desde {formatDate(r.effectiveFromMs, { year: 'numeric' })}</span>
                     </li>
                   ))}
@@ -482,6 +555,16 @@ export function Settings({
           )}
         </div>
       </details>
+      <section className="card demo-invitation">
+        <h2>Así se ve una semana completa</h2>
+        <p className="muted">
+          Explora un ejemplo con horas extra, comidas y descuentos antes de registrar tu propia
+          semana.
+        </p>
+        <button className="secondary" onClick={onExample}>
+          Ver una semana de ejemplo
+        </button>
+      </section>
     </>
   );
 }

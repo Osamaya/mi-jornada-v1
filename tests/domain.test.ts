@@ -26,7 +26,12 @@ function fixture(rate = 2000): AppState {
   state.employment[0].weekAnchorMs = MONDAY;
   state.payroll[0].ficaConfirmed = true;
   state.payroll[0].federalConfirmed = true;
-  state.rates.push({ id: 'rate', effectiveFromMs: 0, hourlyCents: rate });
+  state.rates.push({
+    id: 'rate',
+    effectiveFromMs: 0,
+    hourlyCents: rate,
+    overtimeHourlyCents: null,
+  });
   return state;
 }
 function shift(state: AppState, date: string, hours: number, start = '08:00') {
@@ -233,12 +238,22 @@ describe('descansos, vigencias y cambios de horario', () => {
   });
   test('tarifa cambia sin reescribir segmentos', () => {
     const s = schedule([8, 8]);
-    s.rates.push({ id: 'r2', effectiveFromMs: at('2026-10-20T00:00'), hourlyCents: 2200 });
+    s.rates.push({
+      id: 'r2',
+      effectiveFromMs: at('2026-10-20T00:00'),
+      hourlyCents: 2200,
+      overtimeHourlyCents: null,
+    });
     expect(run(s).grossCents).toBe(33600);
   });
   test('tarifas mixtas con extra conserva base y advierte', () => {
     const s = schedule([9, 9, 9, 9, 9]);
-    s.rates.push({ id: 'r2', effectiveFromMs: at('2026-10-20T00:00'), hourlyCents: 2200 });
+    s.rates.push({
+      id: 'r2',
+      effectiveFromMs: at('2026-10-20T00:00'),
+      hourlyCents: 2200,
+      overtimeHourlyCents: null,
+    });
     expect(run(s).grossCents).toBeNull();
     expect(run(s).baseCents).toBe(97200);
   });

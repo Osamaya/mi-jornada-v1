@@ -53,7 +53,7 @@ export function validateState(value: unknown): asserts value is AppState {
     'payments',
     'audit',
   ]);
-  choice(value.schemaVersion, [2]);
+  choice(value.schemaVersion, [3]);
   obj(value.profile, ['displayName']);
   text(value.profile.displayName, 60);
   if (
@@ -131,9 +131,10 @@ export function validateState(value: unknown): asserts value is AppState {
   )
     fail('Falta la versión inicial de configuración.');
   for (const r of state.rates) {
-    obj(r, ['id', 'effectiveFromMs', 'hourlyCents']);
+    obj(r, ['id', 'effectiveFromMs', 'hourlyCents', 'overtimeHourlyCents']);
     integer(r.effectiveFromMs);
     integer(r.hourlyCents, 1, 10_000_000);
+    if (r.overtimeHourlyCents !== null) integer(r.overtimeHourlyCents, 1, 10_000_000);
   }
   for (const s of state.sessions) {
     obj(s, ['id', 'startMs', 'endMs', 'zone', 'source', 'note', 'revision', 'voidedAtMs']);
@@ -224,11 +225,18 @@ export function validateState(value: unknown): asserts value is AppState {
 
 /** Convierte respaldos anteriores sin alterar sus jornadas, tarifas o auditoría. */
 export function upgradeState(value: unknown): AppState {
+  value = structuredClone(value);
   if (value && typeof value === 'object' && 'schemaVersion' in value && value.schemaVersion === 1) {
     if ('profile' in value) fail('El respaldo anterior contiene campos incompatibles.');
-    const upgraded = { ...value, schemaVersion: 2, profile: { displayName: '' } };
-    validateState(upgraded);
-    return upgraded;
+    value = { ...value, schemaVersion: 2, profile: { displayName: '' } };
+  }
+  if (value && typeof value === 'object' && 'schemaVersion' in value && value.schemaVersion === 2) {
+    if (!('rates' in value) || !Array.isArray(value.rates)) fail('Falta el historial de tarifas.');
+    const rates = value.rates.map((rate: unknown) => {
+      obj(rate, ['id', 'effectiveFromMs', 'hourlyCents']);
+      return { ...rate, overtimeHourlyCents: null };
+    });
+    value = { ...value, schemaVersion: 3, rates };
   }
   validateState(value);
   return structuredClone(value);
