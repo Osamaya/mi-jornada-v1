@@ -25,6 +25,7 @@ export interface PayRate {
   id: string;
   effectiveFromMs: number;
   hourlyCents: number;
+  overtimeHourlyCents: number | null;
 }
 export interface WorkSession {
   id: string;
@@ -62,7 +63,7 @@ export interface AuditEvent {
   afterJson: string | null;
 }
 export interface AppState {
-  schemaVersion: 2;
+  schemaVersion: 3;
   revision: number;
   profile: { displayName: string };
   employment: EmploymentSettings[];
@@ -98,6 +99,8 @@ export interface WeekEstimate {
   baseCents: number | null;
   premiumCents: number | null;
   grossCents: number | null;
+  referenceGrossCents: number | null;
+  overtimeHourlyCents: number | null;
   baseExact: { numerator: string; denominator: string };
   segments: PaySegment[];
   warnings: string[];

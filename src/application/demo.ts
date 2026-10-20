@@ -27,7 +27,9 @@ export function demoWeek(): AppState {
       otherWeeklyCents: 1500,
     },
   ];
-  state.rates = [{ id: 'demo-rate', effectiveFromMs: 0, hourlyCents: 2000 }];
+  state.rates = [
+    { id: 'demo-rate', effectiveFromMs: 0, hourlyCents: 2000, overtimeHourlyCents: null },
+  ];
   for (let day = 12; day <= 16; day++) {
     const date = `2026-10-${day}`;
     const id = `demo-session-${day}`;

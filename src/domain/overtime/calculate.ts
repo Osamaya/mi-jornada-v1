@@ -7,7 +7,7 @@ import {
   type PaySegment,
   type WeekEstimate,
 } from '../../shared/models';
-import { rounded } from '../money';
+import { money, rounded } from '../money';
 import { localInstant, weekday } from '../time';
 
 export const RULE_VERSION = 'US-NV-2026-07-01.AO-2025-05-07.v1';
@@ -148,9 +148,16 @@ export function calculateWeek(state: AppState, week: Interval, asOfMs: number): 
       );
   }
   const rates = new Set(paidSegments.map((s) => s.hourlyCents));
+  const overtimeRates = new Set(
+    paidSegments.map((s) => atDate(state.rates, s.startMs)?.overtimeHourlyCents ?? null),
+  );
   if (rates.size > 1 && (dailyExtraMs > 0 || weeklyExtraMs > 0))
     block(
       'Hay varias tarifas con horas extra. El importe base está calculado; la tarifa regular del recargo requiere revisión.',
+    );
+  if (overtimeRates.size > 1 && (dailyExtraMs > 0 || weeklyExtraMs > 0))
+    block(
+      'La tarifa indicada para horas extra cambió dentro de la semana. Revisa la vigencia; el total queda pendiente para no aplicar una cantidad incorrecta.',
     );
   if (
     paidSegments.some((s) => s.workdayStartMs < week.startMs) &&
@@ -188,9 +195,27 @@ export function calculateWeek(state: AppState, week: Interval, asOfMs: number): 
   const premiumNumerator = dailyPremiumNumerator + weeklyPremiumNumerator - credit;
   const selectedMs = dailyPremiumNumerator >= weeklyPremiumNumerator ? dailyExtraMs : weeklyExtraMs;
   const baseCents = missingRate ? null : rounded(baseNumerator, BigInt(HOUR));
-  const grossCents = blocked
+  const referenceGrossCents = blocked
     ? null
     : rounded(2n * baseNumerator + premiumNumerator, 2n * BigInt(HOUR));
+  const overtimeHourlyCents = overtimeRates.size === 1 ? [...overtimeRates][0] : null;
+  const grossCents = blocked
+    ? null
+    : overtimeHourlyCents === null
+      ? referenceGrossCents
+      : rounded(
+          baseNumerator + (BigInt(overtimeHourlyCents) - rate) * BigInt(selectedMs),
+          BigInt(HOUR),
+        );
+  if (
+    overtimeHourlyCents !== null &&
+    selectedMs > 0 &&
+    !blocked &&
+    2n * BigInt(overtimeHourlyCents) < 3n * rate
+  )
+    warnings.push(
+      `La tarifa extra que indicaste (${money(overtimeHourlyCents)}/h) es menor que una vez y media tu tarifa normal. El total muestra ese pago indicado; la referencia de las reglas generales es ${money(referenceGrossCents)} antes de descuentos. Revisa la diferencia con tu empleador.`,
+    );
   const provisional = relevant.some((s) => s.endMs === null) || asOfMs < week.endMs;
   if (provisional)
     warnings.push('Semana en curso: la estimación cambia al agregar o corregir jornadas.');
@@ -206,6 +231,8 @@ export function calculateWeek(state: AppState, week: Interval, asOfMs: number): 
     baseCents,
     premiumCents: grossCents === null || baseCents === null ? null : grossCents - baseCents,
     grossCents,
+    referenceGrossCents,
+    overtimeHourlyCents,
     baseExact: { numerator: baseNumerator.toString(), denominator: HOUR.toString() },
     segments,
     warnings: [...new Set(warnings)],
@@ -216,6 +243,11 @@ export function calculateWeek(state: AppState, week: Interval, asOfMs: number): 
       'Día laboral: ventanas consecutivas de 24 horas desde el inicio de trabajo; no se reinicia a medianoche.',
       `Se comparan la prima diaria y la semanal; se acredita la menor sin duplicar el recargo (AO-2025-05).`,
       'Importes racionales en centavos; el bruto se redondea una sola vez al centavo, mitades hacia arriba.',
+      ...(overtimeHourlyCents === null
+        ? []
+        : [
+            'El pago estimado usa la tarifa total por hora extra indicada por el usuario. La referencia de las reglas generales conserva el recargo de una vez y media; no se modifica por registrar otro pago.',
+          ]),
     ],
   };
 }

@@ -10,7 +10,7 @@ const LocalFiles = registerPlugin<{
 export function backupJson(state: AppState): string {
   validateState(state);
   return JSON.stringify(
-    { format: 'mi-jornada-backup', formatVersion: 2, exportedAt: new Date().toISOString(), state },
+    { format: 'mi-jornada-backup', formatVersion: 3, exportedAt: new Date().toISOString(), state },
     null,
     2,
   );
@@ -27,7 +27,7 @@ export function parseBackup(text: string): AppState {
   if (
     !data ||
     data.format !== 'mi-jornada-backup' ||
-    ![1, 2].includes(data.formatVersion) ||
+    ![1, 2, 3].includes(data.formatVersion) ||
     Object.keys(data).sort().join(',') !== 'exportedAt,format,formatVersion,state'
   )
     throw new Error('Formato o versión de respaldo incompatible.');
@@ -53,6 +53,8 @@ export function csvWeek(state: AppState, estimate: WeekEstimate): string {
       'tarifa_usd_h',
       'extra_diaria_candidata',
       'bruto_semanal_estimado',
+      'tarifa_extra_indicada_usd_h',
+      'bruto_referencia_reglas_generales',
       'regla',
       'advertencias',
     ]
@@ -73,6 +75,10 @@ export function csvWeek(state: AppState, estimate: WeekEstimate): string {
         s.hourlyCents === null ? 'Pendiente' : (s.hourlyCents / 100).toFixed(2),
         s.dailyOvertime ? 'sí' : 'no',
         money(estimate.grossCents),
+        estimate.overtimeHourlyCents === null
+          ? 'Automática (1.5 veces)'
+          : money(estimate.overtimeHourlyCents),
+        money(estimate.referenceGrossCents),
         estimate.ruleVersion,
         estimate.warnings.join(' | '),
       ]

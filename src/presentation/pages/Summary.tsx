@@ -37,6 +37,7 @@ export function Summary({
     payment?.ytdBeforeCents == null ? '' : (payment.ytdBeforeCents / 100).toFixed(2),
   );
   const settings = atDate(state.payroll, estimate.week.startMs)!;
+  const customExtra = estimate.overtimeHourlyCents !== null;
   async function savePayment(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (saving) return;
@@ -109,7 +110,11 @@ export function Summary({
         <div>
           <span className="eyebrow">ANTES DE DESCUENTOS</span>
           <strong>{money(estimate.grossCents)}</strong>
-          <small>Por las horas registradas de esta semana</small>
+          <small>
+            {customExtra
+              ? 'Con el pago por hora extra que indicaste'
+              : 'Por las horas registradas de esta semana'}
+          </small>
         </div>
         <div className="pay-after">
           <span className="eyebrow">DESPUÉS DE DESCUENTOS</span>
@@ -123,6 +128,35 @@ export function Summary({
           )}
         </div>
       </section>
+      {customExtra && estimate.referenceGrossCents !== null && estimate.grossCents !== null && (
+        <section className="card" aria-label="Comparación del pago por horas extra">
+          <h2>Tu pago indicado y la referencia</h2>
+          <p>
+            Indicaste {money(estimate.overtimeHourlyCents)} por cada hora extra. El pago y los
+            descuentos estimados de esta pantalla usan esa cantidad.
+          </p>
+          <dl className="pay-lines">
+            <div>
+              <dt>Antes de descuentos, con tu tarifa indicada</dt>
+              <dd>{money(estimate.grossCents)}</dd>
+            </div>
+            <div>
+              <dt>Referencia con las reglas generales (1.5 veces)</dt>
+              <dd>{money(estimate.referenceGrossCents)}</dd>
+            </div>
+            {estimate.referenceGrossCents > estimate.grossCents && (
+              <div className="subtotal">
+                <dt>Diferencia por revisar antes de descuentos</dt>
+                <dd>{money(estimate.referenceGrossCents - estimate.grossCents)}</dd>
+              </div>
+            )}
+          </dl>
+          <small>
+            La tarifa que registras describe lo que te indican que pagan; no cambia las reglas de
+            horas extra confirmadas para tu trabajo.
+          </small>
+        </section>
+      )}
       <HelpHint title="¿Qué significa antes y después de descuentos?">
         <p>
           Antes de descuentos es todo lo que suman tus horas normales y extra. En un recibo suele
@@ -147,7 +181,11 @@ export function Summary({
         <div className="stat card">
           <span>Horas extra</span>
           <strong>{hours(estimate.extraMs)}</strong>
-          <small>Se pagan a una vez y media cuando corresponde</small>
+          <small>
+            {customExtra
+              ? 'Pago indicado: ' + money(estimate.overtimeHourlyCents) + '/h'
+              : 'Se pagan a una vez y media cuando corresponde'}
+          </small>
         </div>
       </div>
       <div className="two-column">
@@ -159,7 +197,11 @@ export function Summary({
               <dd>{money(estimate.baseCents)}</dd>
             </div>
             <div>
-              <dt>Dinero adicional por horas extra</dt>
+              <dt>
+                {customExtra
+                  ? 'Diferencia por tu tarifa de horas extra'
+                  : 'Dinero adicional por horas extra'}
+              </dt>
               <dd>{money(estimate.premiumCents)}</dd>
             </div>
             <div className="subtotal">
@@ -396,7 +438,10 @@ export function Summary({
           <summary>Ver cómo se calculan mis horas</summary>
           <p>
             Se suman tus horas pagadas. La comida pagada y los descansos cortos pagados no se
-            restan. Cuando corresponden horas extra, se añade el dinero adicional una sola vez.
+            restan.{' '}
+            {customExtra
+              ? 'Las horas extra usan el pago por hora que indicaste; la referencia general se muestra por separado.'
+              : 'Cuando corresponden horas extra, se añade el dinero adicional una sola vez.'}
           </p>
           <p>
             Tiempo total entre entrada y salida: {hours(estimate.presenceMs)}. Actividad fuera de

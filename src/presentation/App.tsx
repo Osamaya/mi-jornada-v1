@@ -422,6 +422,9 @@ function PersonalApp({ onExample }: { onExample: () => void }) {
                     <div>
                       <span>Antes de descuentos</span>
                       <strong>{money(currentEstimate.grossCents)}</strong>
+                      {currentEstimate.overtimeHourlyCents !== null && (
+                        <small>Con la tarifa extra que indicaste</small>
+                      )}
                     </div>
                     <div>
                       <span>Después de descuentos</span>
